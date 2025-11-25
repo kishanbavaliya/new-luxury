@@ -1,0 +1,61 @@
+# Environment files
+.env
+.env.*
+!.env.example
+
+# IDE & system files
+*.log
+*.cache
+*.lock
+*.rnd
+.DS_Store
+Thumbs.db
+
+# Node / NPM
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Composer
+/vendor/
+/composer.phar
+
+# Laravel directories
+/storage/*
+!/storage/app
+!/storage/app/public
+!/storage/framework
+!/storage/framework/cache
+!/storage/logs
+/bootstrap/cache/*
+!/bootstrap/cache/.gitignore
+
+# SQL files (sensitive)
+*.sql
+
+# Secret JSON files
+luxury-limoexpress-e5fe8df985b7.json
+*.key
+*.pem
+
+# Backup file
+*.save
+
+# Auto-generated files
+/public/hot
+/public/storage
+/public/mix-manifest.json
+
+# Testing
+coverage/
+
+# Custom unwanted files you listed
+true,
+webbooking-apis.txt
+svg_for_booking_confirmation.txt
+luxury (2).sql
+
+storage/app/public/push-configurations/*.json
+storage/
+24-11-2025backup.zip
+luxury.zip
