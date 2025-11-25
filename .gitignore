@@ -55,7 +55,6 @@ webbooking-apis.txt
 svg_for_booking_confirmation.txt
 luxury (2).sql
 
-storage/app/public/push-configurations/*.json
-storage/
+storage/app/public/push-configurations/
 24-11-2025backup.zip
 luxury.zip
