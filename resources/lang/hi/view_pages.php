@@ -231,6 +231,7 @@ return array (
   'upload_build' => 'बिल्ड अपलोड करें',
   'identify_number_locale_key' => 'संख्या कुंजी को पहचानें',
   'doc_type' => 'दस्तावेज़ का प्रकार',
+  'applicable_for' => 'लागू के लिए',
   'account_type' => 'खाते का प्रकार',
   'has_expiry_date' => 'समाप्ति तिथि है',
   'vehicle_make' => 'वाहन की कंपनी',

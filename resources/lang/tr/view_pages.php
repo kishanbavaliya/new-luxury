@@ -231,6 +231,7 @@ return array (
   'upload_build' => 'Derlemeyi Yükle',
   'identify_number_locale_key' => 'Numara Anahtarını Tanımla',
   'doc_type' => 'Belge Türü',
+  'applicable_for' => 'Uygulanabilir',
   'account_type' => 'hesap tipi',
   'has_expiry_date' => 'Son Kullanma Tarihi Var',
   'vehicle_make' => 'Araç Markası',

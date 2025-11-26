@@ -124,9 +124,15 @@ class DriverDocumentController extends BaseController
             } else {
 
                 $owner_id = auth()->user()->owner->id;
+                $owner = auth()->user()->owner;
 
-                $ownerneededdocumentQuery  = OwnerNeededDocument::active()->get();
-
+                $ownerneededdocumentQuery  = OwnerNeededDocument::active();
+                if ($owner->as_driver == 1) {
+                    $ownerneededdocumentQuery = $ownerneededdocumentQuery->where('as_driver', 1);
+                } else {
+                    $ownerneededdocumentQuery = $ownerneededdocumentQuery->where('as_owner', 1);
+                }
+                $ownerneededdocumentQuery = $ownerneededdocumentQuery->get();
                 $neededdocument =  fractal($ownerneededdocumentQuery, new OwnerNeededDocumentTransformer);
 
                 foreach (OwnerNeededDocument::active()->get() as $key => $needed_document) {

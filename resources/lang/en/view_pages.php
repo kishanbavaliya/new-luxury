@@ -234,6 +234,7 @@ return array (
   'upload_build' => 'Upload Build',
   'identify_number_locale_key' => 'Identify Number Key',
   'doc_type' => 'Document Type',
+  'applicable_for' => 'Applicable For',
   'account_type' => 'Account Type',
   'has_expiry_date' => 'Has Expiry Date',
   'vehicle_make' => 'Vehicle Make',

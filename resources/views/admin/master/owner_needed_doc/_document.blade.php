@@ -4,6 +4,8 @@
             <th> @lang('view_pages.s_no')</th>
             <th> @lang('view_pages.name')</th>
             <th> @lang('view_pages.doc_type')</th>
+            <!-- <th> @lang('view_pages.owner')</th>
+            <th> @lang('view_pages.driver')</th> -->
             <th> @lang('view_pages.has_expiry_date')</th>
             <th> @lang('view_pages.status')</th>
             <th> @lang('view_pages.action')</th>
@@ -18,6 +20,8 @@
             <td>{{ $i++ }} </td>
             <td>{{ $result->name }}</td>
             <td>{{ ucfirst($result->doc_type) }}</td>
+            <!-- <td>{{ $result->as_owner ? __('view_pages.yes') : __('view_pages.no') }}</td>
+            <td>{{ $result->as_driver ? __('view_pages.yes') : __('view_pages.no') }}</td> -->
             <td>{{ $result->has_expiry_date ? 'Yes' : 'No' }}</td>
             @if($result->active)
             <td><span class="label label-success">@lang('view_pages.active')</span></td>

@@ -231,6 +231,7 @@ return array (
   'upload_build' => 'Carica build',
   'identify_number_locale_key' => 'Identificare la chiave numerica',
   'doc_type' => 'tipo di documento',
+  'applicable_for' => 'Applicabile a',
   'account_type' => 'Tipo di account',
   'has_expiry_date' => 'Ha una data di scadenza',
   'vehicle_make' => 'Marca del veicolo',

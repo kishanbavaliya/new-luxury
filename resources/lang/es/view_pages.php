@@ -231,6 +231,7 @@ return array (
   'upload_build' => 'Cargar compilación',
   'identify_number_locale_key' => 'Identificar la clave numérica',
   'doc_type' => 'Tipo de Documento',
+  'applicable_for' => 'Aplicable para',
   'account_type' => 'Tipo de cuenta',
   'has_expiry_date' => 'Tiene fecha de caducidad',
   'vehicle_make' => 'Marca del vehículo',

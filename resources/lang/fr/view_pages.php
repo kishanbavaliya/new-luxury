@@ -231,6 +231,7 @@ return array (
   'upload_build' => 'Télécharger la version',
   'identify_number_locale_key' => 'Identifier la clé numérique',
   'doc_type' => 'Type de document',
+  'applicable_for' => 'Applicable pour',
   'account_type' => 'Type de compte',
   'has_expiry_date' => 'A une date d\'expiration',
   'vehicle_make' => 'Marque du véhicule',
