@@ -61,6 +61,8 @@ class OwnerNeededDocumentController extends BaseController
         ])->validate();
 
         $created_params = $request->only(['name','has_expiry_date','has_identify_number']);
+        $created_params['as_owner'] = $request->input('as_owner') == "1" ? 1 : 0;
+        $created_params['as_driver'] = $request->input('as_driver') == "1" ? 1 : 0;
 
         if($request->has_identify_number){
             $created_params['identify_number_locale_key'] = $request->identify_number_locale_key;
@@ -96,7 +98,8 @@ class OwnerNeededDocumentController extends BaseController
         ])->validate();
 
         $updated_params = $request->only(['name','has_expiry_date','has_identify_number']);
-
+        $updated_params['as_owner'] = $request->input('as_owner') == "1" ? 1 : 0;
+        $updated_params['as_driver'] = $request->input('as_driver') == "1" ? 1 : 0;
         if($request->has_identify_number){
             $updated_params['identify_number_locale_key'] = $request->identify_number_locale_key;
         }else{

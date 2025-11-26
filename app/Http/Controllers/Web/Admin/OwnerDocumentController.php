@@ -40,9 +40,15 @@ class OwnerDocumentController extends BaseController
 
     public function index(Owner $owner)
     {
-        $neededDocument = OwnerNeededDocument::whereActive(true)->get();
+        $neededDocument = OwnerNeededDocument::whereActive(true);
+        if ($owner->as_driver == 1) {
+            $neededDocument = $neededDocument->where('as_driver', 1);
+        } else {
+            $neededDocument = $neededDocument->where('as_owner', 1);
+        }
+        $neededDocument = $neededDocument->get();
         $ownerDoc = OwnerDocument::whereOwnerId($owner->id)->get();
-
+        
         $page = trans('pages_names.owner_document');
         $main_menu = 'manage_owners';
         $sub_menu = $owner->area->name;

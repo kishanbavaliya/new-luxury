@@ -231,6 +231,7 @@ return array (
   'upload_build' => '上传构建',
   'identify_number_locale_key' => '识别号码键',
   'doc_type' => '文件类型',
+  'applicable_for' => '适用于',
   'account_type' => '帐户类型',
   'has_expiry_date' => '有有效期',
   'vehicle_make' => '车辆品牌',

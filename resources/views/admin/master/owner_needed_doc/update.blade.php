@@ -83,6 +83,22 @@
                                             <span class="text-danger">{{ $errors->first('identify_number_locale_key') }}</span>
                                         </div>
                                     </div>
+
+                                    <div class="col-12">
+                                        <div class="form-group">
+                                            <label for="">@lang('view_pages.applicable_for')</label>
+                                            <div class="form-check">
+                                                <input type="hidden" name="as_owner" value="0">
+                                                <input class="form-check-input" type="checkbox" name="as_owner" id="as_owner" value="1" {{ old('as_owner',$item->as_owner) ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="as_owner">@lang('view_pages.owner')</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input type="hidden" name="as_driver" value="0">
+                                                <input class="form-check-input" type="checkbox" name="as_driver" id="as_driver" value="1" {{ old('as_driver',$item->as_driver) ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="as_driver">@lang('view_pages.driver')</label>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
 

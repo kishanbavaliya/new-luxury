@@ -43,6 +43,8 @@ class OwnerNeededDocumentTransformer extends Transformer
             'has_expiry_date' => (bool) $ownerneededdocument->has_expiry_date,
             'active' => $ownerneededdocument->active,
             'identify_number_locale_key'=>$ownerneededdocument->identify_number_locale_key,
+            'as_owner' => (bool) $ownerneededdocument->as_owner,
+            'as_driver' => (bool) $ownerneededdocument->as_driver,
             'is_uploaded'=>false,
             'document_status'=>2,
             'document_status_string'=>DriverDocumentStatusString::NOT_UPLOADED

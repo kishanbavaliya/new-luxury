@@ -231,6 +231,7 @@ return array (
   'upload_build' => 'تحميل البناء',
   'identify_number_locale_key' => 'تحديد مفتاح الرقم',
   'doc_type' => 'نوع الوثيقة',
+  'applicable_for' => 'ينطبق على',
   'account_type' => 'نوع الحساب',
   'has_expiry_date' => 'لديه تاريخ انتهاء الصلاحية',
   'vehicle_make' => 'صناعة المركبات',

@@ -231,6 +231,7 @@ return array (
   'upload_build' => 'உருவாக்கத்தை பதிவேற்றவும்',
   'identify_number_locale_key' => 'எண் விசையை அடையாளம் காணவும்',
   'doc_type' => 'ஆவண வகை',
+  'applicable_for' => 'பயன்பாடு',
   'account_type' => 'கணக்கு வகை',
   'has_expiry_date' => 'காலாவதி தேதி உள்ளது',
   'vehicle_make' => 'வாகனம் தயாரித்தல்',

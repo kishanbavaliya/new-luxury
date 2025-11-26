@@ -231,6 +231,7 @@ return array (
   'upload_build' => 'Carregar versão',
   'identify_number_locale_key' => 'Identificar chave numérica',
   'doc_type' => 'tipo de documento',
+  'applicable_for' => 'Aplicável a',
   'account_type' => 'tipo de conta',
   'has_expiry_date' => 'Tem data de validade',
   'vehicle_make' => 'Marca do veículo',
