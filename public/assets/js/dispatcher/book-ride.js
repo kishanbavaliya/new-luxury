@@ -1228,6 +1228,8 @@ var baseUrl = appUrl;
                 $("label.option1").show();
                 $(".book-later-date").hide();
             }
+            $("#own_price").val('');
+            $(".select-checkbox-btn-input").prop("checked", false);
         });
         $(document).on("change","#transport_types",function(){
             var data_val = $(this).val(); 
