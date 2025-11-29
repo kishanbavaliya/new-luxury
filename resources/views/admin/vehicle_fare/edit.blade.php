@@ -158,11 +158,6 @@
                                 <span class="text-danger">{{ $errors->first('ride_now_price_per_distance') }}</span>
                             </div>
 
-                            <div class="col-12 col-lg-6 mt-4">
-                                <label for="booking_hourly_price">@lang('view_pages.booking_hourly_price') <span class="text-danger">*</span></label>
-                                <input id="ride_now_booking_hourly_price" name="ride_now_booking_hourly_price" value="{{ old('ride_now_booking_hourly_price', $zone_price->booking_hourly_price ?? 0) }}" type="text" class="form-control w-full" placeholder="@lang('view_pages.enter') @lang('view_pages.booking_hourly_price')" required>
-                                <span class="text-danger">{{ $errors->first('ride_now_booking_hourly_price') }}</span>
-                            </div>
 
                             <div class="col-12 col-lg-6 mt-4">
                                 <label for="base_distance" class="form-label">@lang('view_pages.base_distance')</label>
@@ -198,7 +193,7 @@
 
                         </div>
 
-                    @else
+                    @elseif ($zone_price->price_type == 2)
                  <!-- <div class="col-sm-12"> -->
                         <div class="row">
                             <div class="form-group">
@@ -219,11 +214,6 @@
                                 <span class="text-danger">{{ $errors->first('ride_later_price_per_distance') }}</span>
                             </div>
 
-                            <div class="col-12 col-lg-6 mt-4">
-                                <label for="booking_hourly_price">@lang('view_pages.booking_hourly_price') <span class="text-danger">*</span></label>
-                                <input id="ride_later_booking_hourly_price" name="ride_later_booking_hourly_price" value="{{ old('ride_later_booking_hourly_price', $zone_price->booking_hourly_price ?? 0) }}" type="text" class="form-control w-full" placeholder="@lang('view_pages.enter') @lang('view_pages.booking_hourly_price')" required>
-                                <span class="text-danger">{{ $errors->first('ride_later_booking_hourly_price') }}</span>
-                            </div>
 
                             <div  class="col-12 col-lg-6 mt-4">
                                 <label for="base_distance" class="form-label">@lang('view_pages.base_distance')</label>
@@ -251,6 +241,77 @@
                                 <input id="ride_now_ride_now_free_waiting_time_in_mins_after_trip_start" name="ride_now_ride_now_free_waiting_time_in_mins_after_trip_start" value="{{ old('ride_now_ride_now_free_waiting_time_in_mins_after_trip_start', $zone_price->free_waiting_time_in_mins_after_trip_start) }}" type="text" class="form-control w-full" placeholder="@lang('view_pages.enter') @lang('view_pages.ride_now_free_waiting_time_in_mins_after_trip_start')" required>
                                 <span class="text-danger">{{ $errors->first('ride_now_ride_now_free_waiting_time_in_mins_after_trip_start') }}</span>
                             </div>                            
+                        </div>
+                    @elseif ($zone_price->price_type == 3)
+                        <div class="row">
+                            <div class="col-12 ">
+                                <h2 class="fw-medium fs-base me-auto">
+                                    Booking Hour
+                                </h2>
+                            </div>
+                        </div>
+                        <div class="row ml-2 mr-2">
+                            <!-- <div class="col-12 col-lg-6 mt-4">
+                              <label for="base_price">@lang('view_pages.base_price')&nbsp (@lang('view_pages.kilometer')) <span class="text-danger">*</span></label>
+                                <input id="booking_hour_base_price" name="booking_hour_base_price" value="{{ old('booking_hour_base_price', $zone_price->base_price) }}" type="text" class="form-control w-full" placeholder="@lang('view_pages.enter') @lang('view_pages.base_price')" required>
+                                <span class="text-danger">{{ $errors->first('booking_hour_base_price') }}</span>
+                            </div>
+
+                            <div  class="col-12 col-lg-6 mt-4">
+                              <label for="price_per_distance">@lang('view_pages.price_per_distance')&nbsp (@lang('view_pages.kilometer')) <span class="text-danger">*</span></label>
+                                <input id="booking_hour_price_per_distance" name="booking_hour_price_per_distance" value="{{ old('booking_hour_price_per_distance', $zone_price->price_per_distance) }}" type="text" class="form-control w-full" placeholder="@lang('view_pages.enter') @lang('view_pages.price_per_distance')" required>
+                                <span class="text-danger">{{ $errors->first('booking_hour_price_per_distance') }}</span>
+                            </div> -->
+
+                            <div class="col-12 mt-4">
+                                <div class="form-group">
+                                    <label><strong>@lang('view_pages.booking_hourly_price')</strong></label>
+                                    <div class="row">
+                                        @php
+                                            $hourlyPrices = old('booking_hour_hourly_base_prices', $zone_price->hourly_base_prices ?? []);
+                                        @endphp
+                                        @for($hour = 1; $hour <= 12; $hour++)
+                                        <div class="col-sm-6 col-md-4 col-lg-3 mb-3">
+                                            <label for="booking_hour_hourly_base_price_{{$hour}}">@lang('view_pages.booking_hour') {{$hour}}</label>
+                                            <input class="form-control" type="text" id="booking_hour_hourly_base_price_{{$hour}}" name="booking_hour_hourly_base_prices[{{$hour}}]" value="{{ isset($hourlyPrices[$hour]) ? $hourlyPrices[$hour] : '' }}" placeholder="@lang('view_pages.base_price')" pattern="^\d*(\.\d{1,2})?$" title="@lang('view_pages.only_numbers_and_dot_allowed')">
+                                            <span class="text-danger">{{ $errors->first('booking_hour_hourly_base_prices.'.$hour) }}</span>
+                                        </div>
+                                        @endfor
+                                    </div>
+                                </div>
+                            </div>
+<!-- 
+                            <div  class="col-12 col-lg-6 mt-4">
+                                <label for="base_distance" class="form-label">@lang('view_pages.base_distance')</label>
+                                <input id="booking_hour_base_distance" name="booking_hour_base_distance" value="{{ old('booking_hour_base_distance', $zone_price->base_distance) }}" type="number" min="0" class="form-control w-full" placeholder="@lang('view_pages.enter') @lang('view_pages.base_distance')" required>
+                                <span class="text-danger">{{ $errors->first('booking_hour_base_distance') }}</span>
+                            </div>
+                            <div class="col-12 col-lg-6 mt-4">
+                                <label for="price_per_time" class="form-label">@lang('view_pages.time_price')</label>
+                                <input id="booking_hour_price_per_time" name="booking_hour_price_per_time" value="{{ old('booking_hour_price_per_time', $zone_price->price_per_time) }}" type="text" class="form-control w-full" placeholder="@lang('view_pages.enter') @lang('view_pages.price_per_time')" required>
+                                <span class="text-danger">{{ $errors->first('booking_hour_price_per_time') }}</span>
+                            </div>
+
+                            <div class="col-12 col-lg-6 mt-4">
+                                <label for="cancellation_fee" class="form-label">@lang('view_pages.cancellation_fee')</label>
+                                <input id="booking_hour_cancellation_fee" name="booking_hour_cancellation_fee" value="{{ old('booking_hour_cancellation_fee', $zone_price->cancellation_fee) }}" type="text" class="form-control w-full" placeholder="@lang('view_pages.enter') @lang('view_pages.cancellation_fee')" required>
+                                <span class="text-danger">{{ $errors->first('booking_hour_cancellation_fee') }}</span>
+                            </div>
+                            <div class="col-12 col-lg-6 mt-4">
+                                <label for="waiting_charge" class="form-label">@lang('view_pages.waiting_charge')</label>
+                                <input id="booking_hour_waiting_charge" name="booking_hour_waiting_charge" value="{{ old('booking_hour_waiting_charge', $zone_price->waiting_charge) }}" type="text" class="form-control w-full" placeholder="@lang('view_pages.enter') @lang('view_pages.waiting_charge')" required>
+                                <span class="text-danger">{{ $errors->first('booking_hour_waiting_charge') }}</span>
+                            </div>
+                            <div class="col-12 col-lg-6 mt-4">
+                                <label for="booking_hour_free_waiting_time_in_mins_before_trip_start" class="form-label">@lang('view_pages.free_waiting_time_in_mins_before_trip_start')</label>
+                                <input id="booking_hour_free_waiting_time_in_mins_before_trip_start" name="booking_hour_free_waiting_time_in_mins_before_trip_start" value="{{ old('booking_hour_free_waiting_time_in_mins_before_trip_start', $zone_price->free_waiting_time_in_mins_before_trip_start) }}" type="text" class="form-control w-full" placeholder="@lang('view_pages.enter') @lang('view_pages.booking_hour_free_waiting_time_in_mins_before_trip_start')" required>
+                                <span class="text-danger">{{ $errors->first('booking_hour_free_waiting_time_in_mins_before_trip_start') }}</span>
+                            </div>
+                            <div class="col-12 col-lg-6 mt-4">
+                                <label for="booking_hour_free_waiting_time_in_mins_after_trip_start" class="form-label">@lang('view_pages.free_waiting_time_in_mins_after_trip_start')</label>
+                                <input id="booking_hour_free_waiting_time_in_mins_after_trip_start" name="booking_hour_free_waiting_time_in_mins_after_trip_start" value="{{ old('booking_hour_free_waiting_time_in_mins_after_trip_start', $zone_price->free_waiting_time_in_mins_after_trip_start) }}" type="text" class="form-control w-full" placeholder="@lang('view_pages.enter') @lang('view_pages.booking_hour_free_waiting_time_in_mins_after_trip_start')" required>
+                                <span class="text-danger">{{ $errors->first('booking_hour_free_waiting_time_in_mins_after_trip_start') }}</span>
+                            </div>                             -->
                         </div>
                     @endif
             
@@ -388,6 +449,24 @@ document.addEventListener("DOMContentLoaded", function() {
 
 });
 
+    // Validate booking hour hourly base prices - only allow numbers and dot
+    $(document).on('input', 'input[name^="booking_hour_hourly_base_prices"]', function() {
+        var value = $(this).val();
+        // Remove any character that is not a number or dot
+        var newValue = value.replace(/[^0-9.]/g, '');
+        // Ensure only one dot
+        var parts = newValue.split('.');
+        if (parts.length > 2) {
+            newValue = parts[0] + '.' + parts.slice(1).join('');
+        }
+        // Limit decimal places to 2
+        if (parts.length === 2 && parts[1].length > 2) {
+            newValue = parts[0] + '.' + parts[1].substring(0, 2);
+        }
+        if (value !== newValue) {
+            $(this).val(newValue);
+        }
+    });
     
 </script>
 

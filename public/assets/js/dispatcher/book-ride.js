@@ -228,6 +228,11 @@ var baseUrl = appUrl;
                     let packagesArr = '';
                     var vehiclesContainer = document.getElementById('vehicles'); 
                     var booking_type = $('#booking_type').val();
+                    var ride_type = 1;
+                    
+                    if(booking_type == "book-hourly") {
+                        var ride_type = 3;
+                    }
                     var pick_lat = document.getElementById('pickup_lat').value;
                     var pick_lng = document.getElementById('pickup_lng').value;
                     var url = baseUrl+'/api/v1/dispatcher/request/eta'; 
@@ -238,7 +243,7 @@ var baseUrl = appUrl;
                         'drop_lat': dropLat,
                         'drop_lng': dropLng,
                         'stops': JSON.stringify(stop_data),
-                        'ride_type': 1,
+                        'ride_type': ride_type,
                         'transport_type':taxi,
                         'booking_type':booking_type
 
@@ -808,6 +813,15 @@ var baseUrl = appUrl;
                 function calculateEta(truckId, fareType = null) { 
                     var taxi = type;
                     var booking_type = $('#booking_type').val();
+                    var ride_type = 1;
+                    
+                    if(booking_type == "book-hourly") {
+                        var ride_type = 3;
+                    }
+                    var booking_hour = null;
+                    if(booking_type == "book-hourly") {
+                        booking_hour = $('#booking_hour').val();
+                    }
                      var etaData = {
                         'pick_lat': pickUpLat,
                         'pick_lng': pickUpLng,
@@ -815,9 +829,10 @@ var baseUrl = appUrl;
                         'drop_lng': dropLng,
                          'stops': JSON.stringify(stop_data),
                         'vehicle_type': truckId,
-                        'ride_type': 1,
+                        'ride_type': ride_type,
                         'transport_type':taxi,
-                        'booking_type':booking_type
+                        'booking_type':booking_type,
+                        'booking_hour':booking_hour
 
                     };
 
@@ -1228,6 +1243,10 @@ var baseUrl = appUrl;
                 $("label.option1").show();
                 $(".book-later-date").hide();
             }
+            $("#own_price").val('');
+            $(".select-checkbox-btn-input").prop("checked", false);
+        });
+        $(document).on("change","#booking_hour",function(){
             $("#own_price").val('');
             $(".select-checkbox-btn-input").prop("checked", false);
         });

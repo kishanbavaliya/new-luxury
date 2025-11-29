@@ -125,7 +125,6 @@ class VehicleFareController extends Controller
         $zoneType->zoneTypePrice()->create([
             'price_type' => zoneRideType::RIDENOW,
             'base_price' => $request->ride_now_base_price,
-            'booking_hourly_price' => $request->ride_now_booking_hourly_price ? $request->ride_now_booking_hourly_price : 0.00,
             'price_per_distance' => $request->ride_now_price_per_distance,
             'cancellation_fee' => $request->ride_now_cancellation_fee,
             'base_distance' => $request->ride_now_base_distance ? $request->ride_now_base_distance : 0,
@@ -138,7 +137,6 @@ class VehicleFareController extends Controller
         $zoneType->zoneTypePrice()->create([
             'price_type' => zoneRideType::RIDELATER,
             'base_price' => $request->ride_later_base_price,
-            'booking_hourly_price' => $request->ride_later_booking_hourly_price ? $request->ride_later_booking_hourly_price : 0.00,
             'price_per_distance' => $request->ride_later_price_per_distance,
             'cancellation_fee' => $request->ride_later_cancellation_fee,
             'base_distance' => $request->ride_later_base_distance ? $request->ride_later_base_distance : 0,
@@ -146,6 +144,30 @@ class VehicleFareController extends Controller
                  'waiting_charge' => $request->ride_now_waiting_charge ? $request->ride_now_waiting_charge : 0.00,
                 'free_waiting_time_in_mins_before_trip_start' =>  $request->ride_later_free_waiting_time_in_mins_before_trip_start ? $request->ride_later_free_waiting_time_in_mins_before_trip_start:0,
                 'free_waiting_time_in_mins_after_trip_start' =>  $request->ride_later_free_waiting_time_in_mins_after_trip_start ? $request->ride_later_free_waiting_time_in_mins_after_trip_start:0,
+        ]);
+
+        $bookingHourHourlyPrices = [];
+        if ($request->has('booking_hour_hourly_base_prices') && is_array($request->booking_hour_hourly_base_prices)) {
+            foreach ($request->booking_hour_hourly_base_prices as $hour => $price) {
+                if (!empty($price)) {
+                    $bookingHourHourlyPrices[$hour] = $price;
+                } else {
+                    $bookingHourHourlyPrices[$hour] = 0;
+                }
+            }
+        }
+
+        $zoneType->zoneTypePrice()->create([
+            'price_type' => zoneRideType::BOOKINGHOUR,
+            'base_price' => $request->booking_hour_base_price ?? 0.00,
+            'hourly_base_prices' => !empty($bookingHourHourlyPrices) ? $bookingHourHourlyPrices : null,
+            'price_per_distance' => $request->booking_hour_price_per_distance ?? 0.00,
+            'cancellation_fee' => $request->booking_hour_cancellation_fee ?? 0.00,
+            'base_distance' => $request->booking_hour_base_distance ? $request->booking_hour_base_distance : 0,
+            'price_per_time' => $request->booking_hour_price_per_time ? $request->booking_hour_price_per_time : 0.00,
+            'waiting_charge' => $request->booking_hour_waiting_charge ? $request->booking_hour_waiting_charge : 0.00,
+            'free_waiting_time_in_mins_before_trip_start' => $request->booking_hour_free_waiting_time_in_mins_before_trip_start ? $request->booking_hour_free_waiting_time_in_mins_before_trip_start : 0,
+            'free_waiting_time_in_mins_after_trip_start' => $request->booking_hour_free_waiting_time_in_mins_after_trip_start ? $request->booking_hour_free_waiting_time_in_mins_after_trip_start : 0,
         ]);
 
         $message = trans('succes_messages.type_assigned_succesfully');
@@ -187,29 +209,51 @@ class VehicleFareController extends Controller
         ]);
         if($zone_price->price_type == 1)
         {
-        $zone_price->update([
-            'base_price' => $request->ride_now_base_price,
-            'booking_hourly_price' => $request->ride_now_booking_hourly_price ? $request->ride_now_booking_hourly_price : 0.00,
-            'price_per_distance' => $request->ride_now_price_per_distance,
-            'cancellation_fee' => $request->ride_now_cancellation_fee,
-            'base_distance' => $request->ride_now_base_distance ? $request->ride_now_base_distance : 0,
-            'price_per_time' => $request->ride_now_price_per_time ? $request->ride_now_price_per_time : 0.00,
-             'waiting_charge' => $request->ride_now_waiting_charge ? $request->ride_now_waiting_charge : 0.00,
-            'free_waiting_time_in_mins_before_trip_start' =>  $request->ride_now_free_waiting_time_in_mins_before_trip_start ? $request->ride_now_free_waiting_time_in_mins_before_trip_start:0,
-            'free_waiting_time_in_mins_after_trip_start' =>  $request->ride_now_free_waiting_time_in_mins_after_trip_start ? $request->ride_now_free_waiting_time_in_mins_after_trip_start:0,
-        ]);
-        }else{
-        $zone_price->update([
-            'base_price' => $request->ride_later_base_price,
-            'booking_hourly_price' => $request->ride_later_booking_hourly_price ? $request->ride_later_booking_hourly_price : 0.00,
-            'price_per_distance' => $request->ride_later_price_per_distance,
-            'cancellation_fee' => $request->ride_later_cancellation_fee,
-            'base_distance' => $request->ride_later_base_distance ? $request->ride_later_base_distance : 0,
-            'price_per_time' => $request->ride_later_price_per_time ? $request->ride_later_price_per_time : 0.00,
-            'waiting_charge' => $request->ride_now_waiting_charge ? $request->ride_now_waiting_charge : 0.00,
-            'free_waiting_time_in_mins_before_trip_start' =>  $request->ride_later_free_waiting_time_in_mins_before_trip_start ? $request->ride_later_free_waiting_time_in_mins_before_trip_start:0,
-            'free_waiting_time_in_mins_after_trip_start' =>  $request->ride_later_free_waiting_time_in_mins_after_trip_start ? $request->ride_later_free_waiting_time_in_mins_after_trip_start:0,
-        ]);
+            $zone_price->update([
+                'base_price' => $request->ride_now_base_price,
+                'price_per_distance' => $request->ride_now_price_per_distance,
+                'cancellation_fee' => $request->ride_now_cancellation_fee,
+                'base_distance' => $request->ride_now_base_distance ? $request->ride_now_base_distance : 0,
+                'price_per_time' => $request->ride_now_price_per_time ? $request->ride_now_price_per_time : 0.00,
+                 'waiting_charge' => $request->ride_now_waiting_charge ? $request->ride_now_waiting_charge : 0.00,
+                'free_waiting_time_in_mins_before_trip_start' =>  $request->ride_now_free_waiting_time_in_mins_before_trip_start ? $request->ride_now_free_waiting_time_in_mins_before_trip_start:0,
+                'free_waiting_time_in_mins_after_trip_start' =>  $request->ride_now_free_waiting_time_in_mins_after_trip_start ? $request->ride_now_free_waiting_time_in_mins_after_trip_start:0,
+            ]);
+        }elseif($zone_price->price_type == 2){
+
+            $zone_price->update([
+                'base_price' => $request->ride_later_base_price,
+                'price_per_distance' => $request->ride_later_price_per_distance,
+                'cancellation_fee' => $request->ride_later_cancellation_fee,
+                'base_distance' => $request->ride_later_base_distance ? $request->ride_later_base_distance : 0,
+                'price_per_time' => $request->ride_later_price_per_time ? $request->ride_later_price_per_time : 0.00,
+                'waiting_charge' => $request->ride_now_waiting_charge ? $request->ride_now_waiting_charge : 0.00,
+                'free_waiting_time_in_mins_before_trip_start' =>  $request->ride_later_free_waiting_time_in_mins_before_trip_start ? $request->ride_later_free_waiting_time_in_mins_before_trip_start:0,
+                'free_waiting_time_in_mins_after_trip_start' =>  $request->ride_later_free_waiting_time_in_mins_after_trip_start ? $request->ride_later_free_waiting_time_in_mins_after_trip_start:0,
+            ]);
+        }elseif($zone_price->price_type == 3){
+            $bookingHourHourlyPrices = [];
+            if ($request->has('booking_hour_hourly_base_prices') && is_array($request->booking_hour_hourly_base_prices)) {
+                foreach ($request->booking_hour_hourly_base_prices as $hour => $price) {
+                    if (!empty($price)) {
+                        $bookingHourHourlyPrices[$hour] = $price;
+                    } else {
+                        $bookingHourHourlyPrices[$hour] = 0;
+                    }
+                }
+            }
+
+            $zone_price->update([
+                'base_price' => $request->booking_hour_base_price ?? $zone_price->base_price,
+                'hourly_base_prices' => !empty($bookingHourHourlyPrices) ? $bookingHourHourlyPrices : null,
+                'price_per_distance' => $request->booking_hour_price_per_distance ?? $zone_price->price_per_distance,
+                'cancellation_fee' => $request->booking_hour_cancellation_fee ?? $zone_price->cancellation_fee,
+                'base_distance' => $request->booking_hour_base_distance ? $request->booking_hour_base_distance : $zone_price->base_distance,
+                'price_per_time' => $request->booking_hour_price_per_time ? $request->booking_hour_price_per_time : $zone_price->price_per_time,
+                'waiting_charge' => $request->booking_hour_waiting_charge ? $request->booking_hour_waiting_charge : $zone_price->waiting_charge,
+                'free_waiting_time_in_mins_before_trip_start' => $request->booking_hour_free_waiting_time_in_mins_before_trip_start ? $request->booking_hour_free_waiting_time_in_mins_before_trip_start : $zone_price->free_waiting_time_in_mins_before_trip_start,
+                'free_waiting_time_in_mins_after_trip_start' => $request->booking_hour_free_waiting_time_in_mins_after_trip_start ? $request->booking_hour_free_waiting_time_in_mins_after_trip_start : $zone_price->free_waiting_time_in_mins_after_trip_start,
+            ]);
         }
         $message = trans('succes_messages.type_fare_updated_succesfully');
 
