@@ -202,6 +202,7 @@ return array (
   'free_waiting_time_in_mins_after_trip_start' => 'Sürüşe Başladıktan Sonra Dakika Olarak Ücretsiz Bekleme Süresi',
   'ride_now' => 'Şimdi sür',
   'ride_later' => 'Daha Sonra Sür',
+  'booking_hour' => 'Rezervasyon Saati',
   'filter_drivers' => 'Filtre sürücüleri',
   'area' => 'Hizmet-Yer',
   'declined_reason' => 'Reddedilme Nedeni',

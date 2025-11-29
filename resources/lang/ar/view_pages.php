@@ -202,6 +202,8 @@ return array (
   'free_waiting_time_in_mins_after_trip_start' => 'وقت انتظار مجاني بالدقائق بعد بدء الرحلة',
   'ride_now' => 'اركب الآن',
   'ride_later' => 'ركوب في وقت لاحق',
+    'booking_hour' => 'ساعة الحجز',
+  'booking_hourly_price' => 'سعر الحجز بالساعة',
   'filter_drivers' => 'برامج تشغيل التصفية',
   'area' => 'موقع الخدمة',
   'declined_reason' => 'سبب الرفض',

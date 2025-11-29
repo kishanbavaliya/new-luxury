@@ -202,6 +202,8 @@ return array (
   'free_waiting_time_in_mins_after_trip_start' => '乘车后几分钟内免费等待',
   'ride_now' => '立即骑行',
   'ride_later' => '稍后再乘车',
+  'booking_hour' => '预订小时',
+  'booking_hourly_price' => '预订每小时价格',
   'filter_drivers' => '过滤驱动程序',
   'area' => '服务地点',
   'declined_reason' => '拒绝原因',

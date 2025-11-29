@@ -125,6 +125,7 @@ class VehicleFareController extends Controller
         $zoneType->zoneTypePrice()->create([
             'price_type' => zoneRideType::RIDENOW,
             'base_price' => $request->ride_now_base_price,
+            'booking_hourly_price' => $request->ride_now_booking_hourly_price ? $request->ride_now_booking_hourly_price : 0.00,
             'price_per_distance' => $request->ride_now_price_per_distance,
             'cancellation_fee' => $request->ride_now_cancellation_fee,
             'base_distance' => $request->ride_now_base_distance ? $request->ride_now_base_distance : 0,
@@ -137,6 +138,7 @@ class VehicleFareController extends Controller
         $zoneType->zoneTypePrice()->create([
             'price_type' => zoneRideType::RIDELATER,
             'base_price' => $request->ride_later_base_price,
+            'booking_hourly_price' => $request->ride_later_booking_hourly_price ? $request->ride_later_booking_hourly_price : 0.00,
             'price_per_distance' => $request->ride_later_price_per_distance,
             'cancellation_fee' => $request->ride_later_cancellation_fee,
             'base_distance' => $request->ride_later_base_distance ? $request->ride_later_base_distance : 0,
@@ -187,6 +189,7 @@ class VehicleFareController extends Controller
         {
         $zone_price->update([
             'base_price' => $request->ride_now_base_price,
+            'booking_hourly_price' => $request->ride_now_booking_hourly_price ? $request->ride_now_booking_hourly_price : 0.00,
             'price_per_distance' => $request->ride_now_price_per_distance,
             'cancellation_fee' => $request->ride_now_cancellation_fee,
             'base_distance' => $request->ride_now_base_distance ? $request->ride_now_base_distance : 0,
@@ -198,6 +201,7 @@ class VehicleFareController extends Controller
         }else{
         $zone_price->update([
             'base_price' => $request->ride_later_base_price,
+            'booking_hourly_price' => $request->ride_later_booking_hourly_price ? $request->ride_later_booking_hourly_price : 0.00,
             'price_per_distance' => $request->ride_later_price_per_distance,
             'cancellation_fee' => $request->ride_later_cancellation_fee,
             'base_distance' => $request->ride_later_base_distance ? $request->ride_later_base_distance : 0,

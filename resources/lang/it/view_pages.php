@@ -202,6 +202,8 @@ return array (
   'free_waiting_time_in_mins_after_trip_start' => 'Tempo di attesa gratuito in minuti dopo l\'inizio della corsa',
   'ride_now' => 'Cavalca ora',
   'ride_later' => 'Pedala più tardi',
+  'booking_hour' => 'Ora di prenotazione',
+  'booking_hourly_price' => 'Prezzo orario di prenotazione',
   'filter_drivers' => 'Filtra i driver',
   'area' => 'Posizione del servizio',
   'declined_reason' => 'Motivo del rifiuto',

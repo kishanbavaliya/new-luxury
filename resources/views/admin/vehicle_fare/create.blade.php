@@ -149,6 +149,17 @@
 
             <div class="row">
                 <div class="col-sm-6">
+                    <div class="form-group">
+                        <label for="booking_hourly_price">@lang('view_pages.booking_hourly_price') <span class="text-danger">*</span></label>
+                        <input class="form-control" type="text" id="ride_now_booking_hourly_price" name="ride_now_booking_hourly_price" value="{{old('ride_now_booking_hourly_price')}}" required="" placeholder="@lang('view_pages.enter') @lang('view_pages.booking_hourly_price')">
+                        <span class="text-danger">{{ $errors->first('ride_now_booking_hourly_price') }}</span>
+                    </div>
+                </div>
+            </div>
+                </div>
+
+            <div class="row">
+                <div class="col-sm-6">
                    <div class="form-group">
                     <label for="base_distance">@lang('view_pages.select_base_distance')
                         <span class="text-danger">*</span>
@@ -230,6 +241,17 @@
 
                         </div>
                     </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label for="booking_hourly_price">@lang('view_pages.booking_hourly_price') <span class="text-danger">*</span></label>
+                            <input class="form-control" type="text" id="ride_later_booking_hourly_price" name="ride_later_booking_hourly_price" value="{{old('ride_later_booking_hourly_price')}}" required="" placeholder="@lang('view_pages.enter') @lang('view_pages.booking_hourly_price')">
+                            <span class="text-danger">{{ $errors->first('ride_later_booking_hourly_price') }}</span>
+                        </div>
+                    </div>
+                </div>
                 </div>
 
                 <div class="row">

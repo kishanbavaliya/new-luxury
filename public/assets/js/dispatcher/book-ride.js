@@ -227,7 +227,7 @@ var baseUrl = appUrl;
                     let typesArr = '';
                     let packagesArr = '';
                     var vehiclesContainer = document.getElementById('vehicles'); 
-
+                    var booking_type = $('#booking_type').val();
                     var pick_lat = document.getElementById('pickup_lat').value;
                     var pick_lng = document.getElementById('pickup_lng').value;
                     var url = baseUrl+'/api/v1/dispatcher/request/eta'; 
@@ -240,6 +240,7 @@ var baseUrl = appUrl;
                         'stops': JSON.stringify(stop_data),
                         'ride_type': 1,
                         'transport_type':taxi,
+                        'booking_type':booking_type
 
                     };   
                     fetch(url, {
@@ -806,6 +807,7 @@ var baseUrl = appUrl;
                 // Calculate eta for Truck and Package - api
                 function calculateEta(truckId, fareType = null) { 
                     var taxi = type;
+                    var booking_type = $('#booking_type').val();
                      var etaData = {
                         'pick_lat': pickUpLat,
                         'pick_lng': pickUpLng,
@@ -815,6 +817,7 @@ var baseUrl = appUrl;
                         'vehicle_type': truckId,
                         'ride_type': 1,
                         'transport_type':taxi,
+                        'booking_type':booking_type
 
                     };
 

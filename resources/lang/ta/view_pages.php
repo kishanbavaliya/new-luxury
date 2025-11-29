@@ -202,6 +202,8 @@ return array (
   'free_waiting_time_in_mins_after_trip_start' => 'சவாரி தொடங்கிய சில நிமிடங்களில் இலவச காத்திருப்பு நேரம்',
   'ride_now' => 'இப்போது சவாரி செய்யுங்கள்',
   'ride_later' => 'பின்னர் சவாரி செய்யுங்கள்',
+  'booking_hour' => 'புக்கிங் மணி',
+  'booking_hourly_price' => 'புக்கிங் மணிநேர விலை',
   'filter_drivers' => 'வடிகட்டி இயக்கிகள்',
   'area' => 'சேவை-இடம்',
   'declined_reason' => 'நிராகரிக்கப்பட்ட காரணம்',

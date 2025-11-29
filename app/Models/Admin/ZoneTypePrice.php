@@ -25,7 +25,7 @@ class ZoneTypePrice extends Model
      * @var array
      */
     protected $fillable = [
-        'zone_type_id','base_price','price_per_distance','waiting_charge','price_per_time','cancellation_fee','base_distance','price_type','active','free_waiting_time_in_mins_before_trip_start','free_waiting_time_in_mins_after_trip_start'
+        'zone_type_id','base_price','booking_hourly_price','price_per_distance','waiting_charge','price_per_time','cancellation_fee','base_distance','price_type','active','free_waiting_time_in_mins_before_trip_start','free_waiting_time_in_mins_after_trip_start'
     ];
 
     /**

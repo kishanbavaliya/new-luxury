@@ -202,6 +202,8 @@ return array (
   'free_waiting_time_in_mins_after_trip_start' => 'सवारी शुरू करने के बाद मिनटों में निःशुल्क प्रतीक्षा समय',
   'ride_now' => 'अभी चलो',
   'ride_later' => 'बाद में सवारी करें',
+  'booking_hour' => 'बुकिंग घंटा',
+  'booking_hourly_price' => 'बुकिंग प्रति घंटा कीमत',
   'filter_drivers' => 'ड्राइवरों को फ़िल्टर करें',
   'area' => 'सेवा-स्थान',
   'declined_reason' => 'अस्वीकृत कारण',
