@@ -27,6 +27,17 @@ use Kreait\Firebase\Contract\Database;
 use App\Models\User;
 use App\Models\Country;
 use App\Models\Admin\Owner;
+use App\Jobs\Notifications\SendPushNotification;
+use App\Helpers\Rides\RidePriceCalculationHelpers;
+use App\Base\Constants\Masters\PaymentType;
+use App\Base\Constants\Masters\WalletRemarks;
+use App\Base\Constants\Masters\UnitType;
+use App\Models\Admin\ZoneTypePackagePrice;
+use App\Models\Admin\Promo;
+use App\Models\Admin\PromoUser;
+use App\Models\Request\RequestCancellationFee;
+use App\Models\Request\RequestBill;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * @group Dispatcher-trips-apis
@@ -37,6 +48,7 @@ class DispatcherCreateRequestController extends BaseController
 {
     protected $request;
     use FetchDriversFromFirebaseHelpers;
+    use RidePriceCalculationHelpers;
 
     public function __construct(Request $request,Database $database,User $user)
     {
@@ -177,9 +189,9 @@ class DispatcherCreateRequestController extends BaseController
 
             'sign_board_name'=>$request->sign_board_name,
             'service_location_id'=>$service_location->id,
-            'baby_bucket'=> $request->baby_bucket,
-            'child_seat'=> $request->child_seat,
-            'booster_seat'=> $request->booster_seat,
+            // 'baby_bucket'=> $request->baby_bucket,
+            // 'child_seat'=> $request->child_seat,
+            // 'booster_seat'=> $request->booster_seat,
             'is_later'=>true
         ];
         $request_params['assign_method'] = $request->assign_method;
@@ -300,8 +312,57 @@ class DispatcherCreateRequestController extends BaseController
         $mqtt_object->success_message  = PushEnums::REQUEST_CREATED;
         $mqtt_object->result = $request_result; 
         DB::commit();
-        if($request->assign_method == 0)
-        {
+        
+        // Handle owner driver assignment
+        if($request->owner_include_option == 'include' && $request->owner_action && $request->owner_driver_id) {
+            $driver_id = $request->owner_driver_id;
+            $driver = Driver::find($driver_id);
+            
+            if($driver) {
+                if($request->owner_action == 'assign') {
+                    // Directly assign driver without notifications to other drivers
+                    $selected_drivers = [];
+                    $selected_drivers["user_id"] = $request_detail->user_id;
+                    $selected_drivers["driver_id"] = $driver_id;
+                    $selected_drivers["active"] = 1;
+                    $selected_drivers["assign_method"] = 1;
+                    $selected_drivers["created_at"] = date('Y-m-d H:i:s');
+                    $selected_drivers["updated_at"] = date('Y-m-d H:i:s');
+                    
+                    // Create RequestMeta for direct assignment
+                    RequestMeta::create([
+                        'request_id' => $request_detail->id,
+                        'driver_id' => $driver_id,
+                        'user_id' => $request_detail->user_id,
+                        'active' => 1,
+                        'assign_method' => 1
+                    ]);
+                    
+                    // Update Firebase
+                    $this->database->getReference('request-meta/'.$request_detail->id)->set([
+                        'driver_id' => $driver_id,
+                        'request_id' => $request_detail->id,
+                        'user_id' => $request_detail->user_id,
+                        'active' => 1,
+                        'updated_at' => Database::SERVER_TIMESTAMP
+                    ]);
+                    
+                    // Send notification only to the assigned driver
+                    $notifable_driver = $driver->user;
+                    $title = trans('push_notifications.new_request_title',[],$notifable_driver->lang ?? 'en');
+                    $body = trans('push_notifications.new_request_body',[],$notifable_driver->lang ?? 'en');
+                    $push_data = ['title' => $title,'message' => $body,'push_type'=>'meta-request'];
+                    dispatch(new SendPushNotification($notifable_driver,$title,$body,$push_data));
+                    
+                    Log::info("Driver {$driver_id} directly assigned to request {$request_detail->id} without notifying other drivers");
+                } elseif($request->owner_action == 'complete') {
+                    // Complete the ride immediately with all end request functionalities
+                    $this->completeRequestFromDispatcher($request_detail, $driver, $request);
+                    
+                    Log::info("Driver {$driver_id} completed ride for request {$request_detail->id} from dispatcher");
+                }
+            }
+        } elseif($request->assign_method == 0) {
             Log::info("test data dispatcher");
             $nearest_drivers =  $this->fetchDriversFromFirebase($request_detail, $only_luxury_limoexpress);
 
@@ -596,5 +657,553 @@ class DispatcherCreateRequestController extends BaseController
         DB::commit();
 
         return $this->respondSuccess($request_result, 'Request Scheduled Successfully');
+    }
+
+    /**
+     * Complete request from dispatcher with all end request functionalities
+     */
+    protected function completeRequestFromDispatcher($request_detail, $driver, $request)
+    {
+        DB::beginTransaction();
+        try {
+            // Create RequestMeta for the driver
+            RequestMeta::create([
+                'request_id' => $request_detail->id,
+                'driver_id' => $driver->id,
+                'user_id' => $request_detail->user_id,
+                'active' => 1,
+                'assign_method' => 1
+            ]);
+
+            // Update driver state as Available
+            if ($driver->driverDetail) {
+                $driver->driverDetail->update(['available' => true]);
+            }
+
+            // Get zone type and pricing
+            $zone_type = $request_detail->zoneType;
+            $ride_type = 1;
+            if($request->booking_type == 'book-hourly') {
+                $ride_type = 3;
+            }
+            $zone_type_price = $zone_type->zoneTypePrice()->where('price_type', $ride_type)->first();
+
+            // Calculate distance - use estimated distance from request or calculate from coordinates
+            $distance = $request_detail->total_distance ?? 0;
+            $request_place = $request_detail->requestPlace;
+            if ($distance == 0 && $request_place) {
+                // Calculate distance from coordinates if not available
+                $pick_lat = $request_place->pick_lat;
+                $pick_lng = $request_place->pick_lng;
+                $drop_lat = $request_place->drop_lat ?? $request_place->pick_lat;
+                $drop_lng = $request_place->drop_lng ?? $request_place->pick_lng;
+
+                if (env('APP_FOR') != 'demo') {
+                    if (get_settings('map_type') == 'open_street') {
+                        $distance_and_duration = getDistanceMatrixByOpenstreetMap($pick_lat, $pick_lng, $drop_lat, $drop_lng);
+                        $distance_in_meters = $distance_and_duration['distance_in_meters'];
+                        $distance = $distance_in_meters / 1000;
+                    } else {
+                        $distance_matrix = get_distance_matrix($pick_lat, $pick_lng, $drop_lat, $drop_lng, true);
+                        if ($distance_matrix->status == "OK" && $distance_matrix->rows[0]->elements[0]->status != "ZERO_RESULTS") {
+                            $distance_in_meters = get_distance_value_from_distance_matrix($distance_matrix);
+                            $distance = ceil($distance_in_meters / 1000);
+                        }
+                    }
+                }
+
+                if ($request_detail->unit == UnitType::MILES) {
+                    $distance = ceil(kilometer_to_miles($distance));
+                }
+            }
+
+            // Calculate duration - use trip_start_time if available, otherwise use current time
+            $trip_start_time = $request_detail->trip_start_time ?? $request_detail->created_at;
+            $duration = $this->calculateDurationOfTrip($trip_start_time);
+
+            // Get waiting times - default to 0 or use free waiting time
+            $before_trip_start_waiting_time = $request->input('before_trip_start_waiting_time', 0);
+            $after_trip_start_waiting_time = $request->input('after_trip_start_waiting_time', 0);
+
+            $subtract_with_free_waiting_before_trip_start = ($before_trip_start_waiting_time - ($zone_type_price->free_waiting_time_in_mins_before_trip_start ?? 0));
+            $subtract_with_free_waiting_after_trip_start = ($after_trip_start_waiting_time - ($zone_type_price->free_waiting_time_in_mins_after_trip_start ?? 0));
+
+            $waiting_time = ($subtract_with_free_waiting_before_trip_start + $subtract_with_free_waiting_after_trip_start);
+            if ($waiting_time < 0) {
+                $waiting_time = 0;
+            }
+
+            // Get promo detail if exists
+            $promo_detail = null;
+            if ($request_detail->promo_id) {
+                $user_id = $request_detail->userDetail->id;
+                $promo_detail = $this->validateAndGetPromoDetail($request_detail->promo_id, $user_id);
+            }
+
+            // Get service location for timezone
+            $service_location = $request_detail->zoneType->zone->serviceLocation;
+            $timezone = $service_location->timezone;
+
+            // Calculate bill
+            if (!$request_place) {
+                throw new \Exception('Request place details not found');
+            }
+            $pick_lat = $request_place->pick_lat;
+            $pick_lng = $request_place->pick_lng;
+            $drop_lat = $request_place->drop_lat ?? $request_place->pick_lat;
+            $drop_lng = $request_place->drop_lng ?? $request_place->pick_lng;
+
+            $calculated_bill = $this->calculateBillForARide(
+                $pick_lat,
+                $pick_lng,
+                $drop_lat,
+                $drop_lng,
+                $distance,
+                $duration,
+                $zone_type,
+                $zone_type_price,
+                $promo_detail,
+                $timezone,
+                null,
+                $waiting_time,
+                $request_detail,
+                $driver
+            );
+
+            // Handle rental package if exists
+            if ($request_detail->is_rental && $request_detail->rental_package_id) {
+                $chosen_package_price = ZoneTypePackagePrice::where('zone_type_id', $request_detail->zone_type_id)
+                    ->where('package_type_id', $request_detail->rental_package_id)
+                    ->first();
+
+                if ($chosen_package_price) {
+                    $calculated_bill = $this->calculateRentalRideFares(
+                        $chosen_package_price,
+                        $distance,
+                        $duration,
+                        $waiting_time,
+                        $promo_detail,
+                        $request_detail,
+                        $driver
+                    );
+                }
+            }
+
+            // Add waiting time details to bill
+            $calculated_bill['before_trip_start_waiting_time'] = $before_trip_start_waiting_time;
+            $calculated_bill['after_trip_start_waiting_time'] = $after_trip_start_waiting_time;
+            $calculated_bill['calculated_waiting_time'] = $waiting_time;
+            $calculated_bill['waiting_charge_per_min'] = $zone_type_price->waiting_charge ?? 0;
+            $calculated_bill['requested_currency_code'] = $service_location->currency_code;
+            $calculated_bill['requested_currency_symbol'] = $service_location->currency_symbol;
+
+            // Update request as completed
+            $request_detail->update([
+                'driver_id' => $driver->id,
+                'is_completed' => true,
+                'completed_at' => date('Y-m-d H:i:s'),
+                'total_distance' => $distance,
+                'total_time' => $duration,
+            ]);
+
+            // Handle payment based on payment option
+            if ($request_detail->payment_opt == PaymentType::CASH) {
+                // Deduct admin commission + tax from driver/owner wallet
+                $admin_commision_with_tax = $calculated_bill['admin_commision_with_tax'];
+                
+                if ($driver->owner()->exists()) {
+                    $owner_wallet = $driver->owner->ownerWalletDetail;
+                    $owner_wallet->amount_spent += $admin_commision_with_tax;
+                    $owner_wallet->amount_balance -= $admin_commision_with_tax;
+                    $owner_wallet->save();
+
+                    $driver->owner->ownerWalletHistoryDetail()->create([
+                        'amount' => $admin_commision_with_tax,
+                        'transaction_id' => str_random(6),
+                        'remarks' => WalletRemarks::ADMIN_COMMISSION_FOR_REQUEST,
+                        'is_credit' => false
+                    ]);
+                } else {
+                    $driver_wallet = $driver->driverWallet;
+                    $driver_wallet->amount_spent += $admin_commision_with_tax;
+                    $driver_wallet->amount_balance -= $admin_commision_with_tax;
+                    $driver_wallet->save();
+
+                    $driver->driverWalletHistory()->create([
+                        'amount' => $admin_commision_with_tax,
+                        'transaction_id' => str_random(6),
+                        'remarks' => WalletRemarks::ADMIN_COMMISSION_FOR_REQUEST,
+                        'is_credit' => false
+                    ]);
+                }
+                $request_detail['is_paid'] = false;
+            } elseif ($request_detail->payment_opt == PaymentType::CARD) {
+                $request_detail['is_paid'] = false;
+                $request_detail->save();
+            } else { // PaymentType::WALLET
+                $request_detail['is_paid'] = true;
+                // Deduct amount from user's wallet
+                $chargable_amount = $calculated_bill['total_amount'];
+                $user_wallet = $request_detail->userDetail->userWallet;
+
+                if ($chargable_amount <= $user_wallet->amount_balance) {
+                    $user_wallet->amount_balance -= $chargable_amount;
+                    $user_wallet->amount_spent += $chargable_amount;
+                    $user_wallet->save();
+
+                    $request_detail->userDetail->userWalletHistory()->create([
+                        'amount' => $chargable_amount,
+                        'transaction_id' => $request_detail->id,
+                        'request_id' => $request_detail->id,
+                        'remarks' => WalletRemarks::SPENT_FOR_TRIP_REQUEST,
+                        'is_credit' => false
+                    ]);
+
+                    // Add driver commission if payment type is wallet
+                    $driver_commision = $calculated_bill['driver_commision'];
+                    
+                    if ($driver->owner()->exists()) {
+                        $owner_wallet = $driver->owner->ownerWalletDetail;
+                        $owner_wallet->amount_added += $driver_commision;
+                        $owner_wallet->amount_balance += $driver_commision;
+                        $owner_wallet->save();
+
+                        $driver->owner->ownerWalletHistoryDetail()->create([
+                            'amount' => $driver_commision,
+                            'transaction_id' => $request_detail->id,
+                            'remarks' => WalletRemarks::TRIP_COMMISSION_FOR_DRIVER,
+                            'is_credit' => true
+                        ]);
+                    } else {
+                        $driver_wallet = $driver->driverWallet;
+                        $driver_wallet->amount_added += $driver_commision;
+                        $driver_wallet->amount_balance += $driver_commision;
+                        $driver_wallet->save();
+
+                        $driver->driverWalletHistory()->create([
+                            'amount' => $driver_commision,
+                            'transaction_id' => $request_detail->id,
+                            'remarks' => WalletRemarks::TRIP_COMMISSION_FOR_DRIVER,
+                            'is_credit' => true
+                        ]);
+                    }
+                } else {
+                    // Insufficient wallet balance, switch to cash
+                    $request_detail->payment_opt = PaymentType::CASH;
+                    $request_detail->save();
+                    $admin_commision_with_tax = $calculated_bill['admin_commision_with_tax'];
+
+                    if ($driver->owner()->exists()) {
+                        $owner_wallet = $driver->owner->ownerWalletDetail;
+                        $owner_wallet->amount_spent += $admin_commision_with_tax;
+                        $owner_wallet->amount_balance -= $admin_commision_with_tax;
+                        $owner_wallet->save();
+
+                        $driver->owner->ownerWalletHistoryDetail()->create([
+                            'amount' => $admin_commision_with_tax,
+                            'transaction_id' => str_random(6),
+                            'remarks' => WalletRemarks::ADMIN_COMMISSION_FOR_REQUEST,
+                            'is_credit' => false
+                        ]);
+                    } else {
+                        $driver_wallet = $driver->driverWallet;
+                        $driver_wallet->amount_spent += $admin_commision_with_tax;
+                        $driver_wallet->amount_balance -= $admin_commision_with_tax;
+                        $driver_wallet->save();
+
+                        $driver->driverWalletHistory()->create([
+                            'amount' => $admin_commision_with_tax,
+                            'transaction_id' => str_random(6),
+                            'remarks' => WalletRemarks::ADMIN_COMMISSION_FOR_REQUEST,
+                            'is_credit' => false
+                        ]);
+                    }
+                }
+            }
+
+            // Store request bill
+            $bill = $request_detail->requestBill()->create($calculated_bill);
+
+            // Update RequestCycles
+            $get_request_datas = RequestCycles::where('request_id', $request_detail->id)->first();
+            if ($get_request_datas) {
+                $user_data = $driver->user ?? null;
+                $request_data = json_decode(base64_decode($get_request_datas->request_data), true);
+                $request_datas['request_id'] = $request_detail->id;
+                $request_datas['user_id'] = $request_detail->user_id ?? ($request_detail->adHocuserDetail->id ?? null);
+                $request_datas['driver_id'] = $driver->id;
+                $driver_details['name'] = $driver->name;
+                $driver_details['mobile'] = $driver->mobile;
+                $driver_details['image'] = $user_data->profile_picture ?? null;
+                $rating = number_format($user_data->rating ?? 0, 2);
+                $data[0]['rating'] = $rating;
+                $data[0]['status'] = 5;
+                $data[0]['process_type'] = "trip_completed";
+                $data[0]['orderby_status'] = intval($get_request_datas->orderby_status) + 1;
+                $request_datas['orderby_status'] = $data[0]['orderby_status'];
+                $data[0]['dricver_details'] = $driver_details;
+                $data[0]['created_at'] = date("Y-m-d H:i:s", time());
+                $request_data1 = array_merge($request_data, $data);
+                $request_datas['request_data'] = base64_encode(json_encode($request_data1));
+
+                RequestCycles::where('id', $get_request_datas->id)->update($request_datas);
+            }
+
+            // Send push notification to user if not dispatch request
+            if (!$request_detail->if_dispatch && $request_detail->user_id) {
+                $user = $request_detail->userDetail;
+                if ($user) {
+                    $title = trans('push_notifications.trip_completed_title', [], $user->lang ?? 'en');
+                    $body = trans('push_notifications.trip_completed_body', [], $user->lang ?? 'en');
+                    dispatch(new SendPushNotification($user, $title, $body));
+                }
+            }
+
+            // Send emails
+            if ($request_detail->user_id) {
+                $User = User::where("id", $request_detail->user_id)->first();
+                if ($User) {
+                    $details = [
+                        "customer_name" => $User->name,
+                        "customer_phone_number" => $User->mobile,
+                        "partner_name" => $driver->name,
+                        "pickup_time" => $request_detail->trip_start_time != "" ? date("d-m-Y H:i:s", strtotime($request_detail->trip_start_time)) : "",
+                        "pickup_location" => $request_detail->pick_address ?? '',
+                        "destination" => $request_detail->drop_address ?? '',
+                        "pickup_poc_instruction" => $request_detail->pickup_poc_instruction ?? '',
+                    ];
+                    Mail::to($User->email)->send(new \App\Mail\RideEndMailForCustomer($details));
+                    Mail::to($driver->email)->send(new \App\Mail\RideEndMailForOwnerDriver($details));
+                    
+                    if (!empty($driver->owner)) {
+                        $details["partner_name"] = $driver->owner->owner_name;
+                        Mail::to($driver->owner->email)->send(new \App\Mail\RideEndMailForOwnerDriver($details));
+                    }
+                }
+            }
+
+            // Update Firebase
+            $this->database->getReference('request-meta/' . $request_detail->id)->set([
+                'driver_id' => $driver->id,
+                'request_id' => $request_detail->id,
+                'user_id' => $request_detail->user_id,
+                'active' => 1,
+                'updated_at' => Database::SERVER_TIMESTAMP
+            ]);
+
+            $this->database->getReference('requests/' . $request_detail->id)->update([
+                'driver_id' => $driver->id,
+                'is_accept' => 1,
+                'is_completed' => true,
+                'updated_at' => Database::SERVER_TIMESTAMP
+            ]);
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error completing request from dispatcher: ' . $e->getMessage());
+            Log::error($e);
+            throw $e;
+        }
+    }
+
+    /**
+     * Calculate duration of trip
+     */
+    protected function calculateDurationOfTrip($start_time)
+    {
+        $current_time = date('Y-m-d H:i:s');
+        $start_time = Carbon::parse($start_time);
+        $end_time = Carbon::parse($current_time);
+        $total_duration = $end_time->diffInMinutes($start_time);
+        return $total_duration;
+    }
+
+    /**
+     * Validate & Get Promo Detail
+     */
+    protected function validateAndGetPromoDetail($promo_code_id, $user_id)
+    {
+        $current_date = Carbon::today()->toDateTimeString();
+        $expired = Promo::where('id', $promo_code_id)->where('to', '>', $current_date)->first();
+        
+        if ($expired) {
+            $exceed_usage = PromoUser::where('promo_code_id', $expired->id)->where('user_id', $user_id)->count();
+            if ($exceed_usage >= $expired->uses_per_user) {
+                return null;
+            } else {
+                return $expired;
+            }
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Calculate Rental Ride Fares
+     */
+    protected function calculateRentalRideFares($zone_type_price, $distance, $duration, $waiting_time, $coupon_detail, $request_detail, $driver)
+    {
+        $request_place = $request_detail->requestPlace;
+
+        $airport_surge = find_airport($request_place->pick_lat, $request_place->pick_lng);
+        if ($airport_surge == null) {
+            $airport_surge = find_airport($request_place->drop_lat, $request_place->drop_lng);
+        }
+
+        $airport_surge_fee = 0;
+        if ($airport_surge) {
+            $airport_surge_fee = $airport_surge->airport_surge_fee ?: 0;
+        }
+
+        // Distance Price
+        $calculatable_distance = $distance - $zone_type_price->free_distance;
+        $calculatable_distance = $calculatable_distance < 0 ? 0 : $calculatable_distance;
+
+        $price_per_distance = $zone_type_price->distance_price_per_km;
+
+        // Validate if the current time in surge timings
+        $timezone = $request_detail->serviceLocationDetail->timezone;
+        $current_time = Carbon::now()->setTimezone($timezone);
+        $day = $current_time->dayName;
+        $current_time = $current_time->toTimeString();
+
+        $zone_surge_price = $request_detail->zoneType->zone->zoneSurge()
+            ->where('day', $day)
+            ->whereTime('start_time', '<=', $current_time)
+            ->whereTime('end_time', '>=', $current_time)
+            ->first();
+
+        if ($zone_surge_price) {
+            $surge_percent = $zone_surge_price->value;
+            $surge_price_additional_cost = ($price_per_distance * ($surge_percent / 100));
+            $price_per_distance += $surge_price_additional_cost;
+            $request_detail->is_surge_applied = true;
+            $request_detail->save();
+        }
+
+        $distance_price = $calculatable_distance * $price_per_distance;
+        
+        // Time Price
+        $ride_duration = $duration > $zone_type_price->free_min ? $duration - $zone_type_price->free_min : 0;
+        $time_price = ($ride_duration) * $zone_type_price->time_price_per_min;
+        
+        // Waiting charge
+        $waiting_charge = $waiting_time * $zone_type_price->waiting_charge;
+        
+        // Base Price
+        $base_price = $zone_type_price->base_price;
+        if(request()->booking_type == 'book-hourly') {
+             $base_price = 0;
+            
+            foreach($zone_type_price->hourly_base_prices as $hour => $price) {
+                if($hour == request()->booking_hour) {
+                    $base_price = $price;
+                    break;
+                }
+            }
+        }
+
+        // Sub Total
+        if ($request_detail->zoneType->vehicleType->is_support_multiple_seat_price && $request_detail->passenger_count > 0) {
+            if ($request_detail->passenger_count == 1) {
+                $seat_discount = $request_detail->zoneType->vehicleType->one_seat_price_discount;
+            }
+            if ($request_detail->passenger_count == 2) {
+                $seat_discount = $request_detail->zoneType->vehicleType->two_seat_price_discount;
+            }
+            if ($request_detail->passenger_count == 3) {
+                $seat_discount = $request_detail->zoneType->vehicleType->three_seat_price_discount;
+            }
+            if ($request_detail->passenger_count == 4) {
+                $seat_discount = $request_detail->zoneType->vehicleType->four_seat_price_discount;
+            }
+
+            $base_price -= ($base_price * ($seat_discount / 100));
+            $distance_price -= ($distance_price * ($seat_discount / 100));
+            $time_price -= ($time_price * ($seat_discount / 100));
+            $airport_surge_fee -= ($airport_surge_fee * ($seat_discount / 100));
+        }
+
+        $sub_total = $base_price + $distance_price + $time_price + $waiting_charge + $airport_surge_fee;
+
+        $discount_amount = 0;
+        if ($coupon_detail) {
+            if ($coupon_detail->minimum_trip_amount < $sub_total) {
+                $discount_amount = $sub_total * ($coupon_detail->discount_percent / 100);
+                if ($discount_amount > $coupon_detail->maximum_discount_amount) {
+                    $discount_amount = $coupon_detail->maximum_discount_amount;
+                }
+                $sub_total = $sub_total - $discount_amount;
+            }
+        }
+        
+        $zone_type = $request_detail->zoneType;
+
+        // Get service tax percentage from settings
+        $tax_percent = $zone_type->service_tax;
+        $tax_amount = ($sub_total * ($tax_percent / 100));
+
+        // Get Admin Commission
+        $admin_commision_type = $zone_type_price->zoneType->admin_commision_type;
+        $service_fee = $zone_type_price->zoneType->admin_commision;
+        $tax_percent = $zone_type_price->zoneType->service_tax;
+        $tax_amount = ($sub_total * ($tax_percent / 100));
+        
+        $admin_commission_type_for_driver = get_settings('admin_commission_type_for_driver');
+        $service_fee_for_driver = get_settings('admin_commission_for_driver');
+
+        if ($driver->owner_id != NULL) {
+            $admin_commission_type_for_driver = get_settings('admin_commission_type_for_owner');
+            $service_fee_for_driver = get_settings('admin_commission_for_owner');
+        }
+
+        if ($admin_commision_type == 1) {
+            $admin_commision = ($sub_total * ($service_fee / 100));
+        } else {
+            $admin_commision = $service_fee;
+        }
+        
+        // Admin commission with tax amount
+        $admin_commision_with_tax = $tax_amount + $admin_commision;
+        $driver_commision = $sub_total + $discount_amount;
+        
+        // Driver Commission
+        if ($coupon_detail && $coupon_detail->deduct_from == 2) {
+            $driver_commision = $sub_total;
+        }
+
+        if ($admin_commission_type_for_driver == 1) {
+            $admin_commision_from_driver = ($driver_commision * ($service_fee_for_driver / 100));
+        } else {
+            $admin_commision_from_driver = $service_fee_for_driver;
+        }
+
+        $driver_commision -= $admin_commision_from_driver;
+
+        // Total Amount
+        $total_amount = $sub_total + $admin_commision_with_tax;
+        $admin_commision_with_tax += $admin_commision_from_driver;
+
+        return [
+            'base_price' => $base_price,
+            'base_distance' => $zone_type_price->free_distance,
+            'price_per_distance' => $zone_type_price->distance_price_per_km,
+            'distance_price' => $distance_price,
+            'price_per_time' => $zone_type_price->time_price_per_min,
+            'time_price' => $time_price,
+            'promo_discount' => $discount_amount,
+            'waiting_charge' => $waiting_charge,
+            'service_tax' => $tax_amount,
+            'service_tax_percentage' => $tax_percent,
+            'admin_commision' => $admin_commision,
+            'admin_commision_with_tax' => $admin_commision_with_tax,
+            'driver_commision' => $driver_commision,
+            'admin_commision_from_driver' => $admin_commision_from_driver,
+            'total_amount' => $total_amount,
+            'total_distance' => $distance,
+            'total_time' => $duration,
+            'airport_surge_fee' => $airport_surge_fee
+        ];
     }
 }
