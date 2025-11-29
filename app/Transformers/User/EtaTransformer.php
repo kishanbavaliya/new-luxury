@@ -335,21 +335,21 @@ class EtaTransformer extends Transformer
         $user_balance = 0;
 
 
-// userWallet
-$user = auth()->user();
-    if($user!=null)
-    {
-        if(!auth()->user()->hasRole(Role::DRIVER))
+        // userWallet
+        $user = auth()->user();
+        if($user!=null)
         {
+            if(!auth()->user()->hasRole(Role::DRIVER))
+            {
 
 
 
-        $user_balance = $user->userWallet ? $user->userWallet->amount_balance : 0;
+            $user_balance = $user->userWallet ? $user->userWallet->amount_balance : 0;
 
-        //$user_balance =  $user->userWallet->amount_balance;
+            //$user_balance =  $user->userWallet->amount_balance;
+            }
+
         }
-
-    }
 
 
         $response['user_wallet_balance'] = $user_balance;
@@ -410,45 +410,101 @@ $user = auth()->user();
                 $response['transport_type'] = "delivery";
             }
         }
-        $response['has_discount'] = false;
-        if ($ride->discount_amount > 0) {
-            $response['has_discount'] = true;
-            $response['discounted_totel'] = round($ride->discounted_total_price, 2);
-            $response['discount_total_tax_amount'] = $ride->discount_total_tax_amount;
-            $response['promocode_id'] = $coupon_detail->id;
+        if(request()->has('ride_type') && request()->ride_type == 3) {
+            $base_price = 0;
+
+            if(!empty($type_prices->hourly_base_prices) && is_array($type_prices->hourly_base_prices)) {
+                
+                if(request()->has('booking_hour') && request()->booking_hour) {
+                    foreach($type_prices->hourly_base_prices as $hour => $price) {
+                        if($hour == request()->booking_hour) {
+                            $base_price = $price;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            $response['has_discount'] = false;
+            if ($ride->discount_amount > 0) {
+                $response['has_discount'] = true;
+                $response['discounted_totel'] = round($ride->discounted_total_price, 2);
+                $response['discount_total_tax_amount'] = $ride->discount_total_tax_amount;
+                $response['promocode_id'] = $coupon_detail->id;
+            }
+            $response['discount_amount'] = 0;
+            $response['distance'] = $ride->distance;
+            $response['time'] = $ride->duration;
+            $response['base_distance'] = $ride->base_distance;
+            $response['base_price'] = $ride->base_price;
+            $response['price_per_distance'] = $ride->price_per_distance;
+            $response['price_per_time'] = $ride->price_per_time;
+            $response['distance_price'] = 0;
+            $response['time_price'] = 0;
+            $response['ride_fare'] = 0;
+            $response['tax_amount'] = 0;
+            $response['without_discount_admin_commision'] = round($ride->without_discount_admin_commision,2);
+            $response['discount_admin_commision'] = round($ride->discount_admin_commision,2);
+            $response['tax'] = $ride->tax_percent;
+            $response['total'] = $base_price;
+            $response['approximate_value'] = 1;
+            $response['min_amount'] = $base_price;
+            $maxamount=$ride->total_price * 1.05;
+            $response['max_amount'] = round($maxamount,2);
+            $response['currency'] = $zone_type->zone->serviceLocation->currency_symbol;
+            $response['currency_name'] = $zone_type->zone->serviceLocation->currency_code;
+            $response['type_name'] = $zone_type->vehicleType->name;
+            $response['unit'] = $zone_type->zone->unit;
+            $response['unit_in_words_without_lang'] = $unit_in_words;
+            $response['unit_in_words'] = $translated_unit_in_words;
+            $response['airport_surge_fee'] = $ride->airport_surge_fee;
+            $response['bidding_low_percentage'] = get_settings('bidding_low_percentage');
+            $response['bidding_high_percentage'] = get_settings('bidding_high_percentage');
+            $response['no_of_people'] = "";
+            $response['no_of_bags'] = "";
+            $response['no_of_doors'] = "";
+            $response['transmission'] = "";
+        } else {
+            $response['has_discount'] = false;
+            if ($ride->discount_amount > 0) {
+                $response['has_discount'] = true;
+                $response['discounted_totel'] = round($ride->discounted_total_price, 2);
+                $response['discount_total_tax_amount'] = $ride->discount_total_tax_amount;
+                $response['promocode_id'] = $coupon_detail->id;
+            }
+            $response['discount_amount'] = $ride->discount_amount;
+            $response['distance'] = $ride->distance;
+            $response['time'] = $ride->duration;
+            $response['base_distance'] = $ride->base_distance;
+            $response['base_price'] = $ride->base_price;
+            $response['price_per_distance'] = $ride->price_per_distance;
+            $response['price_per_time'] = $ride->price_per_time;
+            $response['distance_price'] = $ride->distance_price;
+            $response['time_price'] = $ride->time_price;
+            $response['ride_fare'] = round($ride->subtotal_price,2);
+            $response['tax_amount'] = $ride->tax_amount;
+            $response['without_discount_admin_commision'] = round($ride->without_discount_admin_commision,2);
+            $response['discount_admin_commision'] = round($ride->discount_admin_commision,2);
+            $response['tax'] = $ride->tax_percent;
+            $response['total'] = $ride->total_price;
+            $response['approximate_value'] = 1;
+            $response['min_amount'] = $ride->total_price;
+            $maxamount=$ride->total_price * 1.05;
+            $response['max_amount'] = round($maxamount,2);
+            $response['currency'] = $zone_type->zone->serviceLocation->currency_symbol;
+            $response['currency_name'] = $zone_type->zone->serviceLocation->currency_code;
+            $response['type_name'] = $zone_type->vehicleType->name;
+            $response['unit'] = $zone_type->zone->unit;
+            $response['unit_in_words_without_lang'] = $unit_in_words;
+            $response['unit_in_words'] = $translated_unit_in_words;
+            $response['airport_surge_fee'] = $ride->airport_surge_fee;
+            $response['bidding_low_percentage'] = get_settings('bidding_low_percentage');
+            $response['bidding_high_percentage'] = get_settings('bidding_high_percentage');
+            $response['no_of_people'] = "";
+            $response['no_of_bags'] = "";
+            $response['no_of_doors'] = "";
+            $response['transmission'] = "";
         }
-        $response['discount_amount'] = $ride->discount_amount;
-        $response['distance'] = $ride->distance;
-        $response['time'] = $ride->duration;
-        $response['base_distance'] = $ride->base_distance;
-        $response['base_price'] = $ride->base_price;
-        $response['price_per_distance'] = $ride->price_per_distance;
-        $response['price_per_time'] = $ride->price_per_time;
-        $response['distance_price'] = $ride->distance_price;
-        $response['time_price'] = $ride->time_price;
-        $response['ride_fare'] = round($ride->subtotal_price,2);
-        $response['tax_amount'] = $ride->tax_amount;
-        $response['without_discount_admin_commision'] = round($ride->without_discount_admin_commision,2);
-        $response['discount_admin_commision'] = round($ride->discount_admin_commision,2);
-        $response['tax'] = $ride->tax_percent;
-        $response['total'] = $ride->total_price;
-        $response['approximate_value'] = 1;
-        $response['min_amount'] = $ride->total_price;
-        $maxamount=$ride->total_price * 1.05;
-        $response['max_amount'] = round($maxamount,2);
-        $response['currency'] = $zone_type->zone->serviceLocation->currency_symbol;
-        $response['currency_name'] = $zone_type->zone->serviceLocation->currency_code;
-        $response['type_name'] = $zone_type->vehicleType->name;
-        $response['unit'] = $zone_type->zone->unit;
-        $response['unit_in_words_without_lang'] = $unit_in_words;
-        $response['unit_in_words'] = $translated_unit_in_words;
-        $response['airport_surge_fee'] = $ride->airport_surge_fee;
-        $response['bidding_low_percentage'] = get_settings('bidding_low_percentage');
-        $response['bidding_high_percentage'] = get_settings('bidding_high_percentage');
-        $response['no_of_people'] = "";
-        $response['no_of_bags'] = "";
-        $response['no_of_doors'] = "";
-        $response['transmission'] = "";
         // $response['no_of_people'] = $user->carMake?->no_of_people;
         // $response['no_of_bags'] = $user->carMake?->no_of_bags;
         // $response['no_of_doors'] = $user->carMake?->no_of_doors;

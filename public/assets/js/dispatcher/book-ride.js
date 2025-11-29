@@ -17,13 +17,92 @@ var baseUrl = appUrl;
 
                   // Fetch vehicle types - validate pickup and drop
                 function getVehicleTypes() {
-                    if (pickUpLocation && dropLocation) {
-                        let vehicleDiv = document.getElementById('vehicleTypeDiv');
-                        fetchVehicleTypes(vehicleDiv);
+                    var booking_type = $('#booking_type').val();
+                    
+                    // For hourly bookings, only pickup location is required
+                    if(booking_type == "book-hourly") {
+                        if (pickUpLocation) {
+                            let vehicleDiv = document.getElementById('vehicleTypeDiv');
+                            fetchVehicleTypesForHourly(vehicleDiv);
+                        } else {
+                            showfancyerror('Choose Pickup Location');
+                            return false;
+                        }
                     } else {
-                        showfancyerror('Choose Pickup Drop Location');
-                        return false;
+                        // For other booking types, both pickup and drop are required
+                        if (pickUpLocation && dropLocation) {
+                            let vehicleDiv = document.getElementById('vehicleTypeDiv');
+                            fetchVehicleTypes(vehicleDiv);
+                        } else {
+                            showfancyerror('Choose Pickup Drop Location');
+                            return false;
+                        }
                     }
+                }
+                
+                // Fetch vehicle types for hourly bookings (only needs pickup location)
+                function fetchVehicleTypesForHourly(vehicleDiv) {
+                    var vehiclesContainer = document.getElementById('vehicles'); 
+                    var booking_type = $('#booking_type').val();
+                    var ride_type = 3; // BOOKINGHOUR
+                    var url = baseUrl+'/api/v1/dispatcher/request/eta'; 
+                    var taxi = type;
+                    var etaData = {
+                        'pick_lat': pickUpLat,
+                        'pick_lng': pickUpLng,
+                        'drop_lat': null,
+                        'drop_lng': null,
+                        'stops': JSON.stringify([]),
+                        'ride_type': ride_type,
+                        'transport_type': taxi,
+                        'booking_type': booking_type
+                    };   
+                    fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json;charset=utf-8'
+                            },
+                            body: JSON.stringify(etaData)
+                        })
+                        .then(response => response.json())
+                        .then(result => {
+                            var data = result.data;
+                            var html_data = ""; 
+                            var defaultIcon =
+                                baseUrl+"/dispatcher/assets/img/truck/taxi.png";
+                                    $(".vehicle_type_data").removeClass("d-none");
+                                    $(".vehicle_type").removeClass("d-none");
+                          
+                            if(!result.success)
+                            {
+                                html_data+= `<span style=" font-size: 18px; position: relative; top: -18px;left: 10px; color: red;font-weight: bold;">${result.message}</span>`; 
+                            }   
+                            else{
+                                // Handle both single object and array responses
+                                var vehicleArray = Array.isArray(data) ? data : [data];
+                                vehicleArray.forEach(element => {
+                                    var vehicleIcon = element.icon ? element.icon : defaultIcon;
+                               
+                                 html_data+= `<div class="select-checkbox-btn truck-types" data-id="${element.zone_type_id}" data-type-id="${element.type_id}">
+                                <label for="vehicle_${element.zone_type_id}" class="select-checkbox-btn-wrapper">
+                                    <input id="vehicle_${element.zone_type_id}" name="types" type="radio" class="select-checkbox-btn-input" />
+                                    <span class="select-checkbox-btn-content">
+                                        <a  class="me-4 cursor-pointer">
+                                            <div class="flex-none image-fit rounded-circle">
+                                                <img alt="" class="rounded-circle" src="${vehicleIcon}">
+                                            </div>
+                                            <div class="fs-ls text-gray-600 truncate text-center mt-2">${element.name}</div>
+                                        </a>
+                                    </span>
+                                </label>
+                            </div>`; 
+                            });
+                            } 
+                            vehiclesContainer.innerHTML = html_data; 
+                        })
+                        .catch(error => {
+                            console.error('Error fetching vehicle types:', error);
+                        });
                 }
                 function createTripRequest(data_modal) {
 
@@ -33,7 +112,11 @@ var baseUrl = appUrl;
 
                     // var fareTypeId = $('.addPackageBtn').find('span.removePackage').attr('id');
                     var pickAdd = $('#pickup').val();
-                    var dropAdd = $('#drop').val();
+                    if(data_modal == 'book-hourly') {
+                        var dropAdd = '';
+                    } else {
+                        var dropAdd = $('#drop').val();
+                    }
                     var eta_amount = $('#own_price').val();
                     var comission_percentage = $('#comission_percentage').val();
 
@@ -113,7 +196,8 @@ var baseUrl = appUrl;
                          'sign_board_name':sign_board_name,
                          'include_owner': include_owner,
                          'booking_hour':booking_hour,
-                         'owner_include_option':owner_include_option
+                         'owner_include_option':owner_include_option,
+                         'booking_type':data_modal
                         
                     };
                     var eta_amount = $('#vehicles').find(".truck-types.active").attr('data-amount'); 
@@ -122,9 +206,16 @@ var baseUrl = appUrl;
                         tripData.is_rental=1;
                         tripData.rental_package_id= $('#package_type').val();   
                     }else{
-                        var drop_lat = document.getElementById('drop_lat').value;
-                        var drop_lng = document.getElementById('drop_lng').value;
-                        var dropAdd = document.getElementById('drop').value;
+                        if(data_modal == 'book-hourly') {
+                            var drop_lat = '';
+                            var drop_lng = '';
+                            var dropAdd = '';
+                        }
+                        else {
+                            var drop_lat = document.getElementById('drop_lat').value;
+                            var drop_lng = document.getElementById('drop_lng').value;
+                            var dropAdd = document.getElementById('drop').value;
+                        }
                         tripData.drop_lat= drop_lat;
                         tripData.drop_lng= drop_lng;
                         tripData.drop_address= dropAdd;
@@ -853,9 +944,10 @@ var baseUrl = appUrl;
                                 var etaResponse = result.data;
                                 $('#eta_amount').val(etaResponse.total);
                                 $("#own_price").val(etaResponse.total);
+                                const total = Number(etaResponse.total);
 
                                 $('.etaprice').html(
-                                    `<i class="fas fa-wallet" style="font-size: 17px;"></i> <a href="" class="fw-medium ms-2" style="font-size:20px;">${etaResponse.currency} ${(etaResponse.total).toFixed(2)}</a>`
+                                    `<i class="fas fa-wallet" style="font-size: 17px;"></i> <a href="" class="fw-medium ms-2" style="font-size:20px;">${etaResponse.currency} ${total.toFixed(2)}</a>`
                                     );
                                 $('.etatime').html(
                                     `<i class="far fa-clock" style="font-size: 17px;"></i> <a href="" class="fw-medium ms-2" style="font-size:20px;">${etaResponse.driver_arival_estimation} Mins</a>`
@@ -990,6 +1082,9 @@ var baseUrl = appUrl;
                         pickUpLat = place.geometry.location.lat();
                         pickUpLng = place.geometry.location.lng();
                         pickUpLocation = new google.maps.LatLng(pickUpLat, pickUpLng);
+                        // Update hidden input fields
+                        document.getElementById('pickup_lat').value = pickUpLat;
+                        document.getElementById('pickup_lng').value = pickUpLng;
                          pickUpMarker = new google.maps.Marker({
                             position: pickUpLocation,
                             icon: icons['pickup'].icon,
@@ -1006,6 +1101,16 @@ var baseUrl = appUrl;
                         } else {
                             delivery_map.setCenter(place.geometry.location);
                             delivery_map.setZoom(17);
+                        }
+                        
+                        // Fetch vehicle types if booking type is book-hourly
+                        var booking_type = $('#booking_type').val();
+                        if(booking_type == "book-hourly") {
+                            if (typeof fetchVehicleTypesForHourly === 'function') {
+                                fetchVehicleTypesForHourly(document.getElementById('vehicleTypeDiv'));
+                            } else if (typeof getVehicleTypes === 'function') {
+                                getVehicleTypes();
+                            }
                         }
                         if($('#transport_type').val() == 'rental'){
                         var data_ref = {
