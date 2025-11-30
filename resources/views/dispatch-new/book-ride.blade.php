@@ -229,7 +229,32 @@ input[type="radio"] {
 
                   </div>
                 </div>
-
+                <div class="p-5">
+                  <div class="row">
+                    <div class="col-lg-6">
+                      <div class="textOnInput mt-5 sl">
+                          <label for="pickup" class="form-label">Booking Type</label>
+                          <div class="mt-2 sl">
+                             <select data-placeholder="Select" id="booking_type" class="tom-select w-full sl" style="height:45px;color:black">
+                              <option class="sl" value="book-now">Instant Booking</option>
+                              <option class="sl" value="book-later">Book later</option>
+                              <option class="sl" value="book-hourly">Book Hourly</option>
+                          </select> </div>
+                      </div>
+                    </div>
+                    <div class="col-lg-6" id="hourBox" style="display:none;">
+                        <div class="textOnInput mt-5 sl">
+                            <label for="booking_hour" class="form-label">Select Hour</label>
+                            <select name="booking_hour" id="booking_hour" class="tom-select w-full sl" style="height:45px;color:black">
+                                <option value="">-- Select --</option>
+                                @for ($i = 1; $i <= 12; $i++)
+                                    <option value="{{ $i }}">{{ $i }} Hour</option>
+                                @endfor
+                            </select>
+                        </div>
+                    </div>
+                  </div>
+                </div>
 <!-- locations -->
 @if($request->type == "taxi" || $request->type == "delivery")
                 <div class="d-flex flex-column flex-sm-row align-items-center p-5">
@@ -261,7 +286,7 @@ input[type="radio"] {
                     <div class="col-lg-12 drop-loc">
                       <div class="textOnInput mt-10">
                           <label for="drop" class="form-label">Drop</label>
-                          <input id="drop" type="text" class="form-control" placeholder="Drop Location" required>
+                          <input id="drop" type="text" class="form-control" placeholder="Drop Location">
                           <input type="hidden" class="form-control" id="drop"
                                                         name="drop_addr">
                           <input type="hidden" class="form-control" id="drop_lat"
@@ -275,32 +300,7 @@ input[type="radio"] {
                 </div>
 
 
-                <div class="p-5">
-                  <div class="row">
-                    <div class="col-lg-6">
-                      <div class="textOnInput mt-5 sl">
-                          <label for="pickup" class="form-label">Booking Type</label>
-                          <div class="mt-2 sl">
-                             <select data-placeholder="Select" id="booking_type" class="tom-select w-full sl" style="height:45px;color:black">
-                              <option class="sl" value="book-now">Instant Booking</option>
-                              <option class="sl" value="book-later">Book later</option>
-                              <option class="sl" value="book-hourly">Book Hourly</option>
-                          </select> </div>
-                      </div>
-                    </div>
-                    <div class="col-lg-6" id="hourBox" style="display:none;">
-                        <div class="textOnInput mt-5 sl">
-                            <label for="booking_hour" class="form-label">Select Hour</label>
-                            <select name="booking_hour" id="booking_hour" class="tom-select w-full sl" style="height:45px;color:black">
-                                <option value="">-- Select --</option>
-                                @for ($i = 1; $i <= 12; $i++)
-                                    <option value="{{ $i }}">{{ $i }} Hour</option>
-                                @endfor
-                            </select>
-                        </div>
-                    </div>
-                  </div>
-                </div>
+                
 
                 @if($request->type == "rental")
                 @if($app_for !=="taxi" && $app_for !== 'delivery')
@@ -476,7 +476,7 @@ var default_country = "{{get_settings('default_country_code_for_mobile_app')}}";
       <div class="col-lg-6">
         <div class="textOnInput mt-10 mt-lg-5">
             <label for="own_price" class="form-label">Own Price</label>
-            <input id="own_price" type="number" class="form-control" placeholder="Own Price" min="1" required>
+            <input id="own_price" type="text" class="form-control" placeholder="Own Price" min="1" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');" required>
         </div>
       </div>
       
@@ -825,12 +825,36 @@ var default_country = "{{get_settings('default_country_code_for_mobile_app')}}";
     $(document).ready(function() {
       document.getElementById("booking_type").addEventListener("change", function () {
         let hourBox = document.getElementById("hourBox");
+        let dropLoc = document.querySelector(".drop-loc");
         if (this.value === "book-hourly") {
           hourBox.style.display = "block";
+          if (dropLoc) {
+            dropLoc.style.display = "none";
+          }
+          // Fetch vehicle types if pickup location is available
+          if (typeof pickUpLat !== 'undefined' && pickUpLat && typeof pickUpLng !== 'undefined' && pickUpLng) {
+            if (typeof fetchVehicleTypesForHourly === 'function') {
+              fetchVehicleTypesForHourly(document.getElementById('vehicleTypeDiv'));
+            } else if (typeof getVehicleTypes === 'function') {
+              getVehicleTypes();
+            }
+          }
         } else {
           hourBox.style.display = "none";
+          if (dropLoc) {
+            dropLoc.style.display = "block";
+          }
         }
       });
+      
+      // Check on page load if booking_type is already set to book-hourly
+      var bookingType = document.getElementById("booking_type");
+      if (bookingType && bookingType.value === "book-hourly") {
+        let dropLoc = document.querySelector(".drop-loc");
+        if (dropLoc) {
+          dropLoc.style.display = "none";
+        }
+      }
         // Check on page load (for default selected)
         if ($('input[name="radiobtn"]:checked').val() === "1") {
             $('.manual-assign-section').show();

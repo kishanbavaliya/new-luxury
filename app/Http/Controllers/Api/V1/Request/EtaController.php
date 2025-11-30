@@ -22,6 +22,7 @@ use App\Models\Request\Request as RequestModel;
 use App\Transformers\Requests\PackagesTransformer;
 use App\Models\Master\PackageType;
 use App\Base\Constants\Auth\Role;
+use App\Base\Constants\Masters\zoneRideType;
 use App\Models\Admin\ZoneTypePackagePrice;
 use App\Models\Admin\VehicleType;
 
@@ -59,8 +60,11 @@ class EtaController extends ApiController
         }
 
         $app_for = config('app.app_for');
-        $zone_type = $zone_detail->zoneType();
-
+        $zone_type = $zone_detail->zoneType()->whereHas('zoneTypePrice', function ($q) {
+            if(request()->has('ride_type') && request()->ride_type == 3) {
+                $q->where('price_type', zoneRideType::BOOKINGHOUR);
+            }
+        });
         if($app_for=='taxi' || $app_for=='delivery')
         {
             if ($request->has('vehicle_type')) {

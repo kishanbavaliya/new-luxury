@@ -14,6 +14,14 @@ class CreateTripRequest extends BaseRequest
     public function rules()
     {
         return [
+            'booking_type' => 'required|in:book-now,book-later,book-hourly',
+
+            // Drop only required when NOT hourly booking
+            'drop_lat'     => 'required_unless:booking_type,book-hourly',
+            'drop_lng'     => 'required_unless:booking_type,book-hourly',
+            'drop_address' => 'required_unless:booking_type,book-hourly',
+
+            'booking_hour' => 'required_if:booking_type,book-hourly|integer|min:1|max:12',
             'pick_lat'  => 'required',
             'pick_lng'  => 'required',
             // 'drop_lat'  =>'sometimes|required',

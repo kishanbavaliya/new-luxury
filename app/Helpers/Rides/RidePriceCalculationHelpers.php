@@ -104,18 +104,7 @@ trait RidePriceCalculationHelpers
         
 
          // Base price
-        if(!empty($type_prices) && $type_prices->price_type == zoneRideType::BOOKINGHOUR && request()->has('booking_hour') && !empty($request->booking_hour)){
-            $base_price = 0;
-            
-            foreach($type_prices->hourly_base_prices as $hour => $price) {
-                if($hour == $request->booking_hour) {
-                    $base_price = $price;
-                    break;
-                }
-            }
-        } else {
-            $base_price = $type_prices->base_price ?? 0;
-        }
+        $base_price = $type_prices->base_price ?? 0;
          // Time price
          $time_price = $duration * ($type_prices->price_per_time ?? 0);
 
