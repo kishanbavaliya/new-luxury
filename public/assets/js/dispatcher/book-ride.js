@@ -410,6 +410,19 @@ var baseUrl = appUrl;
                         // console.log(value.length);
                         // console.log("value.length");
                         $(".invalid-phone").hide();
+                        const bookingType = $('#booking_type').val();
+                        const bookingHour = $('#booking_hour').val();
+
+                        if (bookingType === 'book-hourly' && (!bookingHour || bookingHour === '')) {
+                            e.preventDefault();
+
+                            // show error message
+                            if (!$('.booking-hour-error').length) {
+                                $('#hourBox').append(
+                                `<div class="booking-hour-error mt-2 booking-hour-error" style="color: red;">Please select booking hour</div>`
+                                );
+                            }
+                        }
                           // Check if the radio button is checked
                         if (isChecked) {
                             $(".vehicle-type-error").hide();
@@ -440,6 +453,17 @@ var baseUrl = appUrl;
                   
                     
                 })
+                // remove error when user selects hour
+                $('#booking_hour').on('change', function () {
+                    $('.booking-hour-error').remove();
+                });
+
+                // remove error when booking type changes back
+                $('#booking_type').on('change', function () {
+                    if ($(this).val() !== 'book-hourly') {
+                    $('.booking-hour-error').remove();
+                    }
+                });
          function capitalizeFirstLetter(string) {
                     return string.charAt(0).toUpperCase() + string.slice(1);
                 }

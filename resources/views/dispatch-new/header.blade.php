@@ -382,7 +382,7 @@ top:0px !important
             @if(config('app.app_for') !== 'taxi')
             <a href="{{ url('/book-ride') }}?type=delivery"><i class="fa-solid fa-truck me-2"></i>@lang('view_pages.delivery')</a>
             @endif
-            <a href="{{ url('/book-ride') }}?type=rental"><i class="fa-solid me-2 fa-clock"></i>@lang('view_pages.rental')</a>
+            <!-- <a href="{{ url('/book-ride') }}?type=rental"><i class="fa-solid me-2 fa-clock"></i>@lang('view_pages.rental')</a> -->
           </div>
       </li>
       <li class="d-flex request"><i data-feather="file-text"></i><a href="{{ url('/dispatch/requests-list') }}" id="link3" >@lang('view_pages.request_list')</a></li>
