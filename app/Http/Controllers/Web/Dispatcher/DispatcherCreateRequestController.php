@@ -189,10 +189,11 @@ class DispatcherCreateRequestController extends BaseController
 
             'sign_board_name'=>$request->sign_board_name,
             'service_location_id'=>$service_location->id,
-            // 'baby_bucket'=> $request->baby_bucket,
-            // 'child_seat'=> $request->child_seat,
-            // 'booster_seat'=> $request->booster_seat,
-            'is_later'=>true
+            'baby_bucket'=> $request->baby_bucket,
+            'child_seat'=> $request->child_seat,
+            'booster_seat'=> $request->booster_seat,
+            'is_later'=>true,
+            'ride_type' => $request->booking_type ?? ""
         ];
         $request_params['assign_method'] = $request->assign_method;
         $request_params['comission_percentage'] = $request->comission_percentage;
@@ -346,13 +347,37 @@ class DispatcherCreateRequestController extends BaseController
                         'active' => 1,
                         'updated_at' => Database::SERVER_TIMESTAMP
                     ]);
-                    
-                    // Send notification only to the assigned driver
+                    $accepted_fare = $request_detail->request_eta_amount;
+                    $offered_fare = $request_detail->request_eta_amount;
+
+                    $updated_params = [
+                        'driver_id' => $driver->id,
+                        'accepted_at' => date('Y-m-d H:i:s'),
+                        'is_driver_started' => true,
+                        // 'accepted_ride_fare'=>$accepted_fare,
+                        // 'offerred_ride_fare'=>$offered_fare,
+                    ];
+
+                    if($request_detail->is_out_station==0)
+                    {
+                        $updated_params['is_driver_started'] = true;
+                    }
+                    if($driver->owner_id){
+                        $updated_params['owner_id'] = $driver->owner_id;
+                        $updated_params['fleet_id'] = $driver->fleet_id;
+                    }
+
+                    $request_detail->update($updated_params);
+                    $request_detail->fresh();
+
+                    $driver->available = false;
+                    $driver->save();
+
                     $notifable_driver = $driver->user;
-                    $title = trans('push_notifications.new_request_title',[],$notifable_driver->lang ?? 'en');
-                    $body = trans('push_notifications.new_request_body',[],$notifable_driver->lang ?? 'en');
-                    $push_data = ['title' => $title,'message' => $body,'push_type'=>'meta-request'];
-                    dispatch(new SendPushNotification($notifable_driver,$title,$body,$push_data));
+                    $title = trans('push_notifications.ride_confirmed_by_user_title',[],$notifable_driver->lang);
+                    $body = trans('push_notifications.ride_confirmed_by_user_body',[],$notifable_driver->lang);
+
+                    dispatch(new SendPushNotification($notifable_driver,$title,$body));
                     
                     Log::info("Driver {$driver_id} directly assigned to request {$request_detail->id} without notifying other drivers");
                 } elseif($request->owner_action == 'complete') {
@@ -565,6 +590,7 @@ class DispatcherCreateRequestController extends BaseController
             'baby_bucket'=> $request->baby_bucket,
             'child_seat'=> $request->child_seat,
             'booster_seat'=> $request->booster_seat,
+            'ride_type' => $request->booking_type ?? ""
         ];
 
             if($request->has('request_eta_amount') && $request->request_eta_amount){
@@ -752,42 +778,78 @@ class DispatcherCreateRequestController extends BaseController
             $pick_lng = $request_place->pick_lng;
             $drop_lat = $request_place->drop_lat ?? $request_place->pick_lat;
             $drop_lng = $request_place->drop_lng ?? $request_place->pick_lng;
+            if($request_detail->ride_type && $request_detail->ride_type == "book-hourly") {
+                $base_price = 0;
 
-            $calculated_bill = $this->calculateBillForARide(
-                $pick_lat,
-                $pick_lng,
-                $drop_lat,
-                $drop_lng,
-                $distance,
-                $duration,
-                $zone_type,
-                $zone_type_price,
-                $promo_detail,
-                $timezone,
-                null,
-                $waiting_time,
-                $request_detail,
-                $driver
-            );
+                if(!empty($zone_type_price->hourly_base_prices) && is_array($zone_type_price->hourly_base_prices)) {
+                    
+                    if(request()->has('booking_hour') && request()->booking_hour) {
+                        foreach($zone_type_price->hourly_base_prices as $hour => $price) {
+                            if($hour == request()->booking_hour) {
+                                $base_price = $price;
+                                break;
+                            }
+                        }
+                    }
+                }
+                $calculated_bill = [
+                'base_price'=>$base_price,
+                'base_distance'=>$zone_type_price->base_distance ?? 0,
+                'price_per_distance'=>$zone_type_price->price_per_distance ?? 0,
+                'distance_price'=>0,
+                'price_per_time'=>$zone_type_price->price_per_time ?? 0,
+                'time_price'=>0,
+                'promo_discount'=>0,
+                'waiting_charge'=>0,
+                'service_tax'=>0,
+                'service_tax_percentage'=>0,
+                'admin_commision'=>0,
+                'admin_commision_with_tax'=>0,
+                'driver_commision'=>0,
+                'admin_commision_from_driver'=>0,
+                'total_amount'=> $base_price,
+                'total_distance'=>0,
+                'total_time'=>0,
+                'airport_surge_fee'=>0,
+                'cancellation_fee'=>0,
+                ];
+            } else {
+                $calculated_bill = $this->calculateBillForARide(
+                    $pick_lat,
+                    $pick_lng,
+                    $drop_lat,
+                    $drop_lng,
+                    $distance,
+                    $duration,
+                    $zone_type,
+                    $zone_type_price,
+                    $promo_detail,
+                    $timezone,
+                    null,
+                    $waiting_time,
+                    $request_detail,
+                    $driver
+                );
+            }
 
             // Handle rental package if exists
-            if ($request_detail->is_rental && $request_detail->rental_package_id) {
-                $chosen_package_price = ZoneTypePackagePrice::where('zone_type_id', $request_detail->zone_type_id)
-                    ->where('package_type_id', $request_detail->rental_package_id)
-                    ->first();
+            // if ($request_detail->is_rental && $request_detail->rental_package_id) {
+            //     $chosen_package_price = ZoneTypePackagePrice::where('zone_type_id', $request_detail->zone_type_id)
+            //         ->where('package_type_id', $request_detail->rental_package_id)
+            //         ->first();
 
-                if ($chosen_package_price) {
-                    $calculated_bill = $this->calculateRentalRideFares(
-                        $chosen_package_price,
-                        $distance,
-                        $duration,
-                        $waiting_time,
-                        $promo_detail,
-                        $request_detail,
-                        $driver
-                    );
-                }
-            }
+            //     if ($chosen_package_price) {
+            //         $calculated_bill = $this->calculateRentalRideFares(
+            //             $chosen_package_price,
+            //             $distance,
+            //             $duration,
+            //             $waiting_time,
+            //             $promo_detail,
+            //             $request_detail,
+            //             $driver
+            //         );
+            //     }
+            // }
 
             // Add waiting time details to bill
             $calculated_bill['before_trip_start_waiting_time'] = $before_trip_start_waiting_time;

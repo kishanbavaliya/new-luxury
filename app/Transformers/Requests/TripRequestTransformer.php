@@ -139,6 +139,7 @@ class TripRequestTransformer extends Transformer
             'baby_bucket' => $request->baby_bucket,
             'child_seat' => $request->child_seat,
             'booster_seat' => $request->booster_seat,
+            'ride_type' => $request->ride_type,
         ];
         if(!$request->if_dispatch){
             $params['show_otp_feature'] = true;
@@ -204,9 +205,10 @@ class TripRequestTransformer extends Transformer
         }
         $params['maximum_time_for_find_drivers_for_regular_ride'] = $final_interval;
 
-
             $ride_type = 1;
-
+        if($request->ride_type == 'book-hourly') {
+            $ride_type = 3;
+        }
 
         if ($request->zoneType) {
             // Fetch zone type price only once if it exists
