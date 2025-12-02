@@ -212,6 +212,10 @@ class DispatcherCreateRequestController extends BaseController
             $trip_start_time = $request->trip_start_time;
             $secondcarbonDateTime = Carbon::parse($request->trip_start_time, $service_location->timezone)->setTimezone('UTC')->toDateTimeString();
             $request_params['trip_start_time'] = $secondcarbonDateTime;
+        } else {
+            $trip_start_time = Carbon::now();
+            $secondcarbonDateTime = $trip_start_time->setTimezone('UTC')->toDateTimeString();
+            $request_params['trip_start_time'] = $secondcarbonDateTime;
         }
         
           // store request place details
@@ -347,6 +351,8 @@ class DispatcherCreateRequestController extends BaseController
                         'active' => 1,
                         'updated_at' => Database::SERVER_TIMESTAMP
                     ]);
+                    $this->database->getReference('requests/'.$request_detail->id)->update(['is_accept' => 1]);
+
                     $accepted_fare = $request_detail->request_eta_amount;
                     $offered_fare = $request_detail->request_eta_amount;
 
@@ -653,7 +659,24 @@ class DispatcherCreateRequestController extends BaseController
                     ]);
                 }
             }
-
+            if($request->owner_include_option == 'include') {
+                if(!empty($request->include_owner)){
+                    $Owners = Owner::where("email", "!=", "multani@luxury-limoexpress.com")
+                    ->where("company_name", "!=", "Luxury Limoexpress")
+                    ->when(!empty($request->include_owner), function ($query) use ($request) {
+                        // Exclude owners selected in the request
+                        $query->whereNotIn('id', $request->include_owner);
+                    })
+                    ->get();
+                    $only_luxury_limoexpress = 0;
+                    foreach ($Owners as $owner) {
+                        \App\Models\Admin\NotIcludeOwner::create([
+                            "request_id" => $request_detail->id,
+                            "user_id" => $owner->id,
+                        ]);
+                    }
+                }
+            }
             // request place detail params
             $request_place_params = [
             'pick_lat'=>$request->pick_lat,
@@ -671,7 +694,82 @@ class DispatcherCreateRequestController extends BaseController
 
             // Store ad hoc user detail of this request
             // $request_detail->adHocuserDetail()->create($ad_hoc_user_params);
+            // Handle owner driver assignment
+            if($request->owner_include_option == 'include' && $request->owner_action && $request->owner_driver_id) {
+                $driver_id = $request->owner_driver_id;
+                $driver = Driver::find($driver_id);
+                
+                if($driver) {
+                    if($request->owner_action == 'assign') {
+                        // Directly assign driver without notifications to other drivers
+                        $selected_drivers = [];
+                        $selected_drivers["user_id"] = $request_detail->user_id;
+                        $selected_drivers["driver_id"] = $driver_id;
+                        $selected_drivers["active"] = 1;
+                        $selected_drivers["assign_method"] = 1;
+                        $selected_drivers["created_at"] = date('Y-m-d H:i:s');
+                        $selected_drivers["updated_at"] = date('Y-m-d H:i:s');
+                        
+                        // Create RequestMeta for direct assignment
+                        RequestMeta::create([
+                            'request_id' => $request_detail->id,
+                            'driver_id' => $driver_id,
+                            'user_id' => $request_detail->user_id,
+                            'active' => 1,
+                            'assign_method' => 1
+                        ]);
+                        
+                        // Update Firebase
+                        $this->database->getReference('request-meta/'.$request_detail->id)->set([
+                            'driver_id' => $driver_id,
+                            'request_id' => $request_detail->id,
+                            'user_id' => $request_detail->user_id,
+                            'active' => 1,
+                            'updated_at' => Database::SERVER_TIMESTAMP
+                        ]);
+                        $this->database->getReference('requests/'.$request_detail->id)->update(['is_accept' => 1]);
 
+                        $accepted_fare = $request_detail->request_eta_amount;
+                        $offered_fare = $request_detail->request_eta_amount;
+
+                        $updated_params = [
+                            'driver_id' => $driver->id,
+                            'accepted_at' => date('Y-m-d H:i:s'),
+                            'is_driver_started' => true,
+                            // 'accepted_ride_fare'=>$accepted_fare,
+                            // 'offerred_ride_fare'=>$offered_fare,
+                        ];
+
+                        if($request_detail->is_out_station==0)
+                        {
+                            $updated_params['is_driver_started'] = true;
+                        }
+                        if($driver->owner_id){
+                            $updated_params['owner_id'] = $driver->owner_id;
+                            $updated_params['fleet_id'] = $driver->fleet_id;
+                        }
+
+                        $request_detail->update($updated_params);
+                        $request_detail->fresh();
+
+                        $driver->available = false;
+                        $driver->save();
+
+                        $notifable_driver = $driver->user;
+                        $title = trans('push_notifications.ride_confirmed_by_user_title',[],$notifable_driver->lang);
+                        $body = trans('push_notifications.ride_confirmed_by_user_body',[],$notifable_driver->lang);
+
+                        dispatch(new SendPushNotification($notifable_driver,$title,$body));
+                        
+                        Log::info("Driver {$driver_id} directly assigned to request {$request_detail->id} without notifying other drivers");
+                    } elseif($request->owner_action == 'complete') {
+                        // Complete the ride immediately with all end request functionalities
+                        $this->completeRequestFromDispatcher($request_detail, $driver, $request);
+                        
+                        Log::info("Driver {$driver_id} completed ride for request {$request_detail->id} from dispatcher");
+                    }
+                }
+            } 
             $request_result =  fractal($request_detail, new TripRequestTransformer)->parseIncludes('userDetail');
             // @TODO send sms & email to the user
         } catch (\Exception $e) {

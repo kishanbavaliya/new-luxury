@@ -783,14 +783,14 @@ var default_country = "{{get_settings('default_country_code_for_mobile_app')}}";
           } else {
             $('#owner_drivers_container').hide();
             $('#owner_driver_select').html('<option value="">-- Select Driver --</option>');
-            alert('No drivers found for the selected owners');
+            // alert('No drivers found for the selected owners');
           }
         },
         error: function(xhr) {
           console.error('Error fetching drivers:', xhr);
           $('#owner_drivers_container').hide();
           $('#owner_driver_select').html('<option value="">-- Select Driver --</option>');
-          alert('Error loading drivers. Please try again.');
+          // alert('Error loading drivers. Please try again.');
         }
       });
     }
