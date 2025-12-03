@@ -596,7 +596,9 @@ class DispatcherCreateRequestController extends BaseController
             'baby_bucket'=> $request->baby_bucket,
             'child_seat'=> $request->child_seat,
             'booster_seat'=> $request->booster_seat,
-            'ride_type' => $request->booking_type ?? ""
+            'ride_type' => $request->booking_type ?? "",
+            'refrence_name'=>$request->refrence_name,
+            'refrence_short_name'=>$request->refrence_short_name,
         ];
 
             if($request->has('request_eta_amount') && $request->request_eta_amount){

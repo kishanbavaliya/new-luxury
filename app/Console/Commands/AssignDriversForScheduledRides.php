@@ -94,7 +94,7 @@ class AssignDriversForScheduledRides extends Command
 
         $requests = Request::where('is_later', 1)
                     ->where('is_bid_ride',0)
-                    ->where('is_completed', 0)->where('is_cancelled', 0)->where('is_driver_started', 0)->get();
+                    ->where('is_completed', 0)->where('is_cancelled', 0)->where('is_driver_started', 0)->orderBy('created_at', 'desc')->get();
 
         if ($requests->count()==0) {
             return $this->info('no-schedule-rides-found');
