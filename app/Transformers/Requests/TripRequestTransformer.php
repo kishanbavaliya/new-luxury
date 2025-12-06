@@ -139,7 +139,7 @@ class TripRequestTransformer extends Transformer
             'baby_bucket' => $request->baby_bucket,
             'child_seat' => $request->child_seat,
             'booster_seat' => $request->booster_seat,
-            'ride_type' => $request->ride_type,
+            'ride_type' => $request->ride_type ? ucfirst(str_replace('-', ' ', $request->ride_type)) : "",
         ];
         if(!$request->if_dispatch){
             $params['show_otp_feature'] = true;

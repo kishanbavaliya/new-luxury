@@ -376,7 +376,7 @@ class DispatcherCreateRequestController extends BaseController
                     $request_detail->update($updated_params);
                     $request_detail->fresh();
 
-                    $driver->available = false;
+                    $driver->available = true;
                     $driver->save();
 
                     $notifable_driver = $driver->user;
@@ -754,7 +754,7 @@ class DispatcherCreateRequestController extends BaseController
                         $request_detail->update($updated_params);
                         $request_detail->fresh();
 
-                        $driver->available = false;
+                        $driver->available = true;
                         $driver->save();
 
                         $notifable_driver = $driver->user;

@@ -8,6 +8,13 @@
     font-size: 16px;
     font-weight: bold;
 }
+.select-vehile-types-data a {
+    display: flex;
+    flex-direction: column;     /* image on top, text below */
+    align-items: center;        /* center horizontally */
+    justify-content: center;    /* vertical center */
+    text-align: center;
+}
 h2{
     color:black;
 }

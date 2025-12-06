@@ -381,7 +381,7 @@ var baseUrl = appUrl;
                                             <div class="flex-none image-fit rounded-circle">
                                                 <img alt="" class="rounded-circle" src="${vehicleIcon}">
                                             </div>
-                                            <div class="fs-ls text-gray-600 truncate text-center mt-2">${element.name}</div>
+                                            <span class="fs-ls mt-2 text-gray-600">${element.name}</span>
                                         </a>
                                     </span>
                                 </label>

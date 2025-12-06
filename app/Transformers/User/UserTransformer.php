@@ -76,9 +76,10 @@ Log::info('from user - '.$user->id);
             'show_rental_ride'=>true,
             'is_delivery_app'=>false,
             'show_ride_later_feature'=>true,
-            'authorization_code'=>$user->authorization_code
+            'authorization_code'=>$user->authorization_code,
             // 'created_at' => $user->converted_created_at->toDateTimeString(),
             // 'updated_at' => $user->converted_updated_at->toDateTimeString(),
+            'as_driver' => $user->owner()->exists() ? $user->owner->as_driver : '0',
         ];
 
         $params['enable_modules_for_applications'] =  get_settings('enable_modules_for_applications');
