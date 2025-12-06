@@ -240,6 +240,31 @@ class DispatcherController extends BaseController
 
         return view('dispatch-new.book-ride', compact('request', 'Owners', 'app_for', 'Drivers'));
     }
+
+    public function getOwnerDrivers(Request $request)
+    {
+        $ownerIds = $request->input('owner_ids', []);
+        if (empty($ownerIds)) {
+            return response()->json(['success' => false, 'message' => 'No owner IDs provided'], 400);
+        }
+        // Convert owner user_ids to owner IDs
+        $owners = Owner::whereIn('user_id', $ownerIds)->pluck('id');
+        
+        if ($owners->isEmpty()) {
+            return response()->json(['success' => false, 'message' => 'No owners found'], 404);
+        }
+
+        // Get all drivers from all selected owners
+        $drivers = Driver::whereIn('owner_id', $owners)
+            // ->where('active', 1)
+            ->where('approve', 1)
+            ->with('user:id,name,mobile,email')
+            ->with('owner:id,company_name')
+            ->get(['id', 'user_id', 'owner_id', 'name', 'mobile', 'email']);
+
+        return response()->json(['success' => true, 'data' => $drivers]);
+    }
+
     public function store(Request $request)
     {
         $request->validate([

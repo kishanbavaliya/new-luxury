@@ -94,7 +94,7 @@ class AssignDriversForScheduledRides extends Command
 
         $requests = Request::where('is_later', 1)
                     ->where('is_bid_ride',0)
-                    ->where('is_completed', 0)->where('is_cancelled', 0)->where('is_driver_started', 0)->get();
+                    ->where('is_completed', 0)->where('is_cancelled', 0)->where('is_driver_started', 0)->orderBy('created_at', 'desc')->get();
 
         if ($requests->count()==0) {
             return $this->info('no-schedule-rides-found');
@@ -114,18 +114,18 @@ class AssignDriversForScheduledRides extends Command
             }
             $condition_time = [Carbon::parse($request->trip_start_time),Carbon::parse($request->trip_start_time)->subMinutes($findable_duration+5)];
             $current_time = Carbon::now();
-            if ($current_time->between($condition_time[0],$condition_time[1])) {
+            // if ($current_time->between($condition_time[0],$condition_time[1])) {
 
-            }else{
-                continue;
+            // }else{
+            //     continue;
 
-            }
+            // }
             if($current_time > $condition_time[0])
             {
                 $this->cancelRequest($request);
 
             }else{
-
+                
                 $request->update(['on_search'=>true]);
 
                 $this->fetchDriversFromFirebase($request);              

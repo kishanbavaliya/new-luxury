@@ -2,6 +2,7 @@
 
 namespace App\Helpers\Rides;
 
+use App\Base\Constants\Masters\zoneRideType;
 use Kreait\Firebase\Contract\Database;
 use Sk\Geohash\Geohash;
 use Carbon\Carbon;
@@ -34,6 +35,7 @@ trait RidePriceCalculationHelpers
     //
     protected function calculateBillForARide($pick_lat,$pick_lng,$drop_lat,$drop_lng,$total_distance, $duration, $zone_type, $type_prices, $coupon_detail,$timezone,$user_id,$waiting_time,$request_detail,$driver)
     {
+        $request = request();
         $total_distance = round($total_distance,2);
 
         $is_round = (integer)get_settings('can_round_the_bill_values');
@@ -66,9 +68,9 @@ trait RidePriceCalculationHelpers
          * */
 
         // Pricing Parameters
-        $price_per_distance = $type_prices->price_per_distance;
+        $price_per_distance = $type_prices->price_per_distance ?? 0;
 
-        $base_distance = $type_prices->base_distance;
+        $base_distance = $type_prices->base_distance ?? 0;
 
         $calculatable_distance = ($total_distance - $base_distance);
 
@@ -99,13 +101,12 @@ trait RidePriceCalculationHelpers
             $price_per_distance += $surge_price_additional_cost;
 
         }
-
+        
 
          // Base price
-        $base_price = $type_prices->base_price;
-
+        $base_price = $type_prices->base_price ?? 0;
          // Time price
-         $time_price = $duration * $type_prices->price_per_time;
+         $time_price = $duration * ($type_prices->price_per_time ?? 0);
 
          $time_price = round($time_price,2);
 
@@ -116,7 +117,7 @@ trait RidePriceCalculationHelpers
         $distance_price = round($distance_price,2);
 
          // Waiting charge
-        $waiting_charge = $waiting_time * $type_prices->waiting_charge;
+        $waiting_charge = $waiting_time * ($type_prices->waiting_charge ?? 0);
 
         $waiting_charge = round($waiting_charge,2);
 
@@ -359,10 +360,10 @@ trait RidePriceCalculationHelpers
             }
             $result = [
                 'base_price'=>$base_price,
-                'base_distance'=>$type_prices->base_distance,
-                'price_per_distance'=>$type_prices->price_per_distance,
+                'base_distance'=>$type_prices->base_distance ?? 0,
+                'price_per_distance'=>$type_prices->price_per_distance ?? 0,
                 'distance_price'=>$distance_price,
-                'price_per_time'=>$type_prices->price_per_time,
+                'price_per_time'=>$type_prices->price_per_time ?? 0,
                 'time_price'=>$time_price,
                 'promo_discount'=>$discount_amount,
                 'waiting_charge'=>$waiting_charge,
@@ -389,8 +390,8 @@ trait RidePriceCalculationHelpers
                 'distance' => $total_distance,
                 'base_distance' => $base_distance,
                 'base_price' => $base_price,
-                'price_per_distance' => $type_prices->price_per_distance,
-                'price_per_time' => $type_prices->price_per_time,
+                'price_per_distance' => $type_prices->price_per_distance?? 0,
+                'price_per_time' => $type_prices->price_per_time ?? 0,
                 'distance_price' => $distance_price,
                 'time_price' => $time_price,
                 'subtotal_price' => $sub_total,

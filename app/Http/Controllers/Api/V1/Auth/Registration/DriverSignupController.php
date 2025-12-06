@@ -478,8 +478,7 @@ if ($request->has('mobile') && $request->has('email')) {
         $user = $this->user->create($data);
 
         $user->attachRole(Role::OWNER);
-
-        $created_params['as_driver'] = $request->input('as_driver') ?? false;
+        $created_params['as_driver'] = $request->input('as_driver') == "true" ? "1" : "0";
         $owner = $user->owner()->create($created_params);
 
         $owner_wallet = $owner->ownerWalletDetail()->create(['amount_added'=>0]);

@@ -8,6 +8,13 @@
     font-size: 16px;
     font-weight: bold;
 }
+.select-vehile-types-data a {
+    display: flex;
+    flex-direction: column;     /* image on top, text below */
+    align-items: center;        /* center horizontally */
+    justify-content: center;    /* vertical center */
+    text-align: center;
+}
 h2{
     color:black;
 }
@@ -229,7 +236,32 @@ input[type="radio"] {
 
                   </div>
                 </div>
-
+                <div class="p-5">
+                  <div class="row">
+                    <div class="col-lg-6">
+                      <div class="textOnInput mt-5 sl">
+                          <label for="pickup" class="form-label">Booking Type</label>
+                          <div class="mt-2 sl">
+                             <select data-placeholder="Select" id="booking_type" class="tom-select w-full sl" style="height:45px;color:black">
+                              <option class="sl" value="book-now">Instant Booking</option>
+                              <option class="sl" value="book-later">Book later</option>
+                              <option class="sl" value="book-hourly">Book Hourly</option>
+                          </select> </div>
+                      </div>
+                    </div>
+                    <div class="col-lg-6" id="hourBox" style="display:none;">
+                        <div class="textOnInput mt-5 sl">
+                            <label for="booking_hour" class="form-label">Select Hour</label>
+                            <select name="booking_hour" id="booking_hour" class="tom-select w-full sl" style="height:45px;color:black">
+                                <option value="">-- Select --</option>
+                                @for ($i = 1; $i <= 12; $i++)
+                                    <option value="{{ $i }}">{{ $i }} Hour</option>
+                                @endfor
+                            </select>
+                        </div>
+                    </div>
+                  </div>
+                </div>
 <!-- locations -->
 @if($request->type == "taxi" || $request->type == "delivery")
                 <div class="d-flex flex-column flex-sm-row align-items-center p-5">
@@ -261,7 +293,7 @@ input[type="radio"] {
                     <div class="col-lg-12 drop-loc">
                       <div class="textOnInput mt-10">
                           <label for="drop" class="form-label">Drop</label>
-                          <input id="drop" type="text" class="form-control" placeholder="Drop Location" required>
+                          <input id="drop" type="text" class="form-control" placeholder="Drop Location">
                           <input type="hidden" class="form-control" id="drop"
                                                         name="drop_addr">
                           <input type="hidden" class="form-control" id="drop_lat"
@@ -275,32 +307,7 @@ input[type="radio"] {
                 </div>
 
 
-                <div class="p-5">
-                  <div class="row">
-                    <div class="col-lg-6">
-                      <div class="textOnInput mt-5 sl">
-                          <label for="pickup" class="form-label">Booking Type</label>
-                          <div class="mt-2 sl">
-                             <select data-placeholder="Select" id="booking_type" class="tom-select w-full sl" style="height:45px;color:black">
-                              <option class="sl" value="book-now">Instant Booking</option>
-                              <option class="sl" value="book-later">Book later</option>
-                              <option class="sl" value="book-hourly">Book Hourly</option>
-                          </select> </div>
-                      </div>
-                    </div>
-                    <div class="col-lg-6" id="hourBox" style="display:none;">
-                        <div class="textOnInput mt-5 sl">
-                            <label for="booking_hour" class="form-label">Select Hour</label>
-                            <select name="booking_hour" id="booking_hour" class="tom-select w-full sl" style="height:45px;color:black">
-                                <option value="">-- Select --</option>
-                                @for ($i = 1; $i <= 12; $i++)
-                                    <option value="{{ $i }}">{{ $i }} Hour</option>
-                                @endfor
-                            </select>
-                        </div>
-                    </div>
-                  </div>
-                </div>
+                
 
                 @if($request->type == "rental")
                 @if($app_for !=="taxi" && $app_for !== 'delivery')
@@ -476,7 +483,7 @@ var default_country = "{{get_settings('default_country_code_for_mobile_app')}}";
       <div class="col-lg-6">
         <div class="textOnInput mt-10 mt-lg-5">
             <label for="own_price" class="form-label">Own Price</label>
-            <input id="own_price" type="number" class="form-control" placeholder="Own Price" min="1" required>
+            <input id="own_price" type="text" class="form-control" placeholder="Own Price" min="1" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');" required>
         </div>
       </div>
       
@@ -515,8 +522,32 @@ var default_country = "{{get_settings('default_country_code_for_mobile_app')}}";
                     <option value="{{ $item->user_id }}">{{ $item->company_name ." (". $item->email .")" }}</option>
                 @endforeach
               </select>
+              
+              
             </div>
         </div>
+        <!-- Assign/Complete Ride Radio Options -->
+        <div class="col-lg-14" id="owner_action_options" style="display:none; margin-top: 15px;">
+                <div class="owner-toggle mb-2" role="tablist" aria-label="Owner action options">
+                  <input type="radio" id="owner_assign_radio" name="owner_action" value="assign" checked>
+                  <label for="owner_assign_radio" class="btn-owner">
+                    Assign
+                  </label>
+
+                  <input type="radio" id="owner_complete_radio" name="owner_action" value="complete">
+                  <label for="owner_complete_radio" class="btn-owner">
+                    Complete Ride
+                  </label>
+                </div>
+              </div>
+
+              <!-- Owner Drivers Select -->
+              <div class="col-lg-14 w-100" id="owner_drivers_container" style="display:none; margin-top: 15px;">
+                <label for="owner_driver_select" class="form-label">Select Driver</label>
+                <select name="owner_driver_id" id="owner_driver_select" class="form-control select2">
+                  <option value="">-- Select Driver --</option>
+                </select>
+              </div>
       </div>
     </div>
     <div class="row mt-4" style="width:100%">
@@ -705,16 +736,70 @@ var default_country = "{{get_settings('default_country_code_for_mobile_app')}}";
         if($('#not_include_owner').val()){
           $('#not_include_owner').val(null).trigger('change');
         }
+        // Show Assign/Complete Ride options
+        $('#owner_action_options').show();
         // update label for include
         $('#owner_options_label').text('Owner Include Options');
       } else {
         $('#include_owner_container').hide();
         $('#not_include_owner_container').show();
+        // Hide Assign/Complete Ride options and driver select
+        $('#owner_action_options').hide();
+        $('#owner_drivers_container').hide();
         // clear single select
-        $('#include_owner').val('');
+        $('#include_owner').val(null).trigger('change');
+        $('#owner_driver_select').val(null).trigger('change');
         // update label for not-include
         $('#owner_options_label').text('Not Owner Include Options');
       }
+    }
+
+    // Fetch drivers when owner is selected
+    function fetchOwnerDrivers(ownerIds) {
+      if (!ownerIds || ownerIds.length === 0) {
+        $('#owner_drivers_container').hide();
+        $('#owner_driver_select').html('<option value="">-- Select Driver --</option>');
+        return;
+      }
+
+      // Show loading state
+      $('#owner_driver_select').html('<option value="">Loading drivers...</option>');
+      $('#owner_drivers_container').show();
+      
+      $.ajax({
+        url: "{{ url('dispatch/fetch/owner-drivers') }}",
+        type: 'GET',
+        data: {
+          owner_ids: ownerIds
+        },
+        success: function(response) {
+          if (response.success && response.data && response.data.length > 0) {
+            var options = '<option value="">-- Select Driver --</option>';
+            response.data.forEach(function(driver) {
+              var driverName = driver.name || driver.user?.name || 'Unknown';
+              var driverMobile = driver.mobile || driver.user?.mobile || '';
+              var ownerName = driver.owner?.company_name || '';
+              var displayText = driverName + ' (' + driverMobile + ')';
+              if (ownerName) {
+                displayText += ' - ' + ownerName;
+              }
+              options += '<option value="' + driver.id + '">' + displayText + '</option>';
+            });
+            $('#owner_driver_select').html(options);
+            $('#owner_drivers_container').show();
+          } else {
+            $('#owner_drivers_container').hide();
+            $('#owner_driver_select').html('<option value="">-- Select Driver --</option>');
+            // alert('No drivers found for the selected owners');
+          }
+        },
+        error: function(xhr) {
+          console.error('Error fetching drivers:', xhr);
+          $('#owner_drivers_container').hide();
+          $('#owner_driver_select').html('<option value="">-- Select Driver --</option>');
+          // alert('Error loading drivers. Please try again.');
+        }
+      });
     }
 
     // initial state
@@ -722,6 +807,18 @@ var default_country = "{{get_settings('default_country_code_for_mobile_app')}}";
 
     $('input[name="owner_include_option"]').on('change', function(){
       updateOwnerContainers();
+    });
+
+    // Handle owner selection change
+    $('#include_owner').on('change', function(){
+      var selectedOwners = $(this).val();
+
+      if (selectedOwners && selectedOwners.length > 0) {
+        fetchOwnerDrivers(selectedOwners);
+      } else {
+        $('#owner_drivers_container').hide();
+        $('#owner_driver_select').html('<option value="">-- Select Driver --</option>');
+      }
     });
   });
 </script>
@@ -735,12 +832,36 @@ var default_country = "{{get_settings('default_country_code_for_mobile_app')}}";
     $(document).ready(function() {
       document.getElementById("booking_type").addEventListener("change", function () {
         let hourBox = document.getElementById("hourBox");
+        let dropLoc = document.querySelector(".drop-loc");
         if (this.value === "book-hourly") {
           hourBox.style.display = "block";
+          if (dropLoc) {
+            dropLoc.style.display = "none";
+          }
+          // Fetch vehicle types if pickup location is available
+          if (typeof pickUpLat !== 'undefined' && pickUpLat && typeof pickUpLng !== 'undefined' && pickUpLng) {
+            if (typeof fetchVehicleTypesForHourly === 'function') {
+              fetchVehicleTypesForHourly(document.getElementById('vehicleTypeDiv'));
+            } else if (typeof getVehicleTypes === 'function') {
+              getVehicleTypes();
+            }
+          }
         } else {
           hourBox.style.display = "none";
+          if (dropLoc) {
+            dropLoc.style.display = "block";
+          }
         }
       });
+      
+      // Check on page load if booking_type is already set to book-hourly
+      var bookingType = document.getElementById("booking_type");
+      if (bookingType && bookingType.value === "book-hourly") {
+        let dropLoc = document.querySelector(".drop-loc");
+        if (dropLoc) {
+          dropLoc.style.display = "none";
+        }
+      }
         // Check on page load (for default selected)
         if ($('input[name="radiobtn"]:checked').val() === "1") {
             $('.manual-assign-section').show();

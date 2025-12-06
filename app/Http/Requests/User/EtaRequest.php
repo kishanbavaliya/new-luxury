@@ -16,10 +16,10 @@ class EtaRequest extends BaseRequest
         return [
             'pick_lat'  => 'required',
             'pick_lng'  => 'required',
-            'drop_lat'  =>'sometimes|required',
-            'drop_lng'  =>'sometimes|required',
+            // 'drop_lat'  =>'sometimes|required',
+            // 'drop_lng'  =>'sometimes|required',
             'vehicle_type'=>'sometimes|required|uuid|exists:zone_types,id',
-            'ride_type'=>'required|in:1',
+            'ride_type'=>'required|in:1,3',
             'drivers'=>'sometimes|required',
             'promo_code'=>'sometimes|required|exists:promo,code',
         ];

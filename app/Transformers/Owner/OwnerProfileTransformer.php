@@ -75,7 +75,8 @@ class OwnerProfileTransformer extends Transformer
             'currency_symbol' => $user->user->countryDetail->currency_symbol,
             'role'=>'owner',
             'transport_type' => $user->transport_type??null,
-            'authorization_code'=>$authorization_code
+            'authorization_code'=>$authorization_code,
+            'as_driver'=> $user->as_driver ?? "0",
         ];
 
         $params['contact_us_mobile1'] =  get_settings('contact_us_mobile1');

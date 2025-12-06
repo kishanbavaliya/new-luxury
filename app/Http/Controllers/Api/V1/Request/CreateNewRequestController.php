@@ -231,6 +231,7 @@ Log::info("create-request");
             'booster_seat'=> $request->booster_seat,
             'notes_for_chauffeuer'=>$request->notes_for_chauffeuer,
             'sign_board_name'=>$request->sign_board_name,
+            'ride_type' => $request->booking_type ?? ""
         ];
 
         if($request->has('is_pet_available')){
@@ -461,7 +462,7 @@ Log::info("create-request");
             'booster_seat'=> $request->booster_seat,
             'notes_for_chauffeuer'=>$request->notes_for_chauffeuer,
             'sign_board_name'=>$request->sign_board_name,
-            
+            'ride_type' => $request->booking_type ?? ""
             
         ];
 

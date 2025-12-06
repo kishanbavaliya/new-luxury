@@ -205,6 +205,8 @@ return array (
   'free_waiting_time_in_mins_after_trip_start' => 'Free Waiting Time In Minutes After Start A Ride',
   'ride_now' => 'Ride Now',
   'ride_later' => 'Ride Later',
+  'booking_hour' => 'Booking Hour',
+  'booking_hourly_price' => 'Booking hourly price',
   'filter_drivers' => 'Filter drivers',
   'area' => 'Service-Location',
   'declined_reason' => 'Declined Reason',

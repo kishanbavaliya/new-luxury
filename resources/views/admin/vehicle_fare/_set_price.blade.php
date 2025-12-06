@@ -40,8 +40,10 @@
                     <td>
                         @if ($result->price_type == 1)
                         <span class="btn btn-success btn-sm">{{ __('view_pages.ride_now') }}</span>
-                        @else
+                        @elseif ($result->price_type == 2)
                         <span class="btn btn-danger btn-sm">{{ __('view_pages.ride_later') }}</span>
+                        @elseif ($result->price_type == 3)
+                        <span class="btn btn-warning btn-sm">{{ __('view_pages.booking_hour') }}</span>
                         @endif
                     </td>
                     <td>
