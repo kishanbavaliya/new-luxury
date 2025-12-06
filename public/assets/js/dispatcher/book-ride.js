@@ -164,6 +164,13 @@ var baseUrl = appUrl;
                     var booking_hour = document.getElementById('booking_hour').value;
                     var selectedRadio = document.querySelector('input[name="owner_include_option"]:checked');
                     var owner_include_option = selectedRadio ? selectedRadio.value : "";
+                    
+                    // Get owner action (Assign or Complete Ride)
+                    var ownerActionRadio = document.querySelector('input[name="owner_action"]:checked');
+                    var owner_action = ownerActionRadio ? ownerActionRadio.value : "";
+                    
+                    // Get selected owner driver
+                    var owner_driver_id = $('#owner_driver_select').val() || "";
 
                     var tripData = {
                         'vehicle_type': typeId,
@@ -197,7 +204,9 @@ var baseUrl = appUrl;
                          'include_owner': include_owner,
                          'booking_hour':booking_hour,
                          'owner_include_option':owner_include_option,
-                         'booking_type':data_modal
+                         'owner_action': owner_action,
+                         'owner_driver_id': owner_driver_id,
+                         'booking_type':dataModal
                         
                     };
                     var eta_amount = $('#vehicles').find(".truck-types.active").attr('data-amount'); 
@@ -372,7 +381,7 @@ var baseUrl = appUrl;
                                             <div class="flex-none image-fit rounded-circle">
                                                 <img alt="" class="rounded-circle" src="${vehicleIcon}">
                                             </div>
-                                            <div class="fs-ls text-gray-600 truncate text-center mt-2">${element.name}</div>
+                                            <span class="fs-ls mt-2 text-gray-600">${element.name}</span>
                                         </a>
                                     </span>
                                 </label>

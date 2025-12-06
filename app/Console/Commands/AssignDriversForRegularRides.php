@@ -66,7 +66,8 @@ class AssignDriversForRegularRides extends Command
        $ride_cancelation_time =Carbon::now()->subMinutes(10)->format('Y-m-d H:i:s');
 
        $uncompleted_requests = Request::where('created_at', '<', $ride_cancelation_time)
-           ->where('is_later', 0)
+        //    ->where('is_later', 0)
+        ->whereIn('ride_type', ['book-hourly', 'book-now'])
             ->where('is_completed', 0)
            ->where('is_cancelled', 0)
            ->where('is_driver_started', 0)
@@ -116,7 +117,8 @@ class AssignDriversForRegularRides extends Command
         $sub_5_min = Carbon::now()->subMinutes(20)->format('Y-m-d H:i:s');
         // DB::enableQueryLog();
         $requests = Request::where('on_search',1)
-                    ->where('is_later',0)
+                    // ->where('is_later',0)
+                    ->whereIn('ride_type', ['book-hourly', 'book-now'])
                     ->where('is_bid_ride',0)
                     ->where('assign_method', 0)
                     ->where('is_completed', 0)->where('is_cancelled', 0)->where('is_driver_started', 0)->orderBy('created_at', 'desc')->get();

@@ -201,7 +201,12 @@ class ProfileController extends ApiController
 
 
         $user->update($user_params);
-
+        if ($user->owner()->exists()) {
+            $as_driver = $request->input('as_driver') == "true" ? "1" : "0";
+            $user->owner()->update([
+                'as_driver' => $as_driver
+            ]);
+        }
 
 
 
