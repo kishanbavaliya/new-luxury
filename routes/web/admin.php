@@ -494,7 +494,8 @@ Route::middleware('auth:web')->group(function () {
             Route::get('view-driver-invoice-direct/{request_detail}','RequestController@viewDriverInvoiceDirect');
             Route::get('view-customer-invoice-direct/{request_detail}','RequestController@viewCustomerInvoiceDirect');
 
-
+            // Upload bill PDF for completed requests
+            Route::post('upload-bill/{request_detail}', 'RequestController@uploadBill')->name('requests.uploadBill');
 
 
             Route::get('generate-and-send-pdf/{request_detail}', 'RequestController@generateAndSendPDF')->name('generate.pdf');

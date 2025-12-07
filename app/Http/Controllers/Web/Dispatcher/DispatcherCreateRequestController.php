@@ -248,11 +248,11 @@ class DispatcherCreateRequestController extends BaseController
         // DB::beginTransaction();
         // try {
             // Log::info("test1");
-        $only_luxury_limoexpress = 1;
+        $only_luxury_limoexpress = 0;
         $request_detail = $this->request->create($request_params);
         if($request->owner_include_option == 'not_include') {
             if(!empty($request->not_include_owners)){
-                $only_luxury_limoexpress = 0;
+                // $only_luxury_limoexpress = 0;
 
                 foreach($request->not_include_owners as $not_include_owner){
                     \App\Models\Admin\NotIcludeOwner::create([
@@ -271,7 +271,7 @@ class DispatcherCreateRequestController extends BaseController
                     $query->whereNotIn('id', $request->include_owner);
                 })
                 ->get();
-                $only_luxury_limoexpress = 0;
+                // $only_luxury_limoexpress = 0;
                 foreach ($Owners as $owner) {
                     \App\Models\Admin\NotIcludeOwner::create([
                         "request_id" => $request_detail->id,

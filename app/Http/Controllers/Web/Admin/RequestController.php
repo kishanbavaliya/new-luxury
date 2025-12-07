@@ -320,5 +320,34 @@ public function getCancelledRequest(RequestRequest $request)
         return null;
     }
 
+    /**
+     * Upload a bill PDF for a completed request and save path to request_bills
+     *
+     * @param \App\Models\Request\Request $request_detail
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function uploadBill(RequestRequest $request_detail, Request $request)
+    {
+        // Only allow upload for completed requests
+        if (!$request_detail->is_completed) {
+            return redirect()->back()->withErrors(['error' => 'Bill can be uploaded only for completed requests.']);
+        }
+
+        $request->validate([
+            'bill_pdf' => 'required|file|mimes:pdf|max:10240', // max 10MB
+        ]);
+
+        $file = $request->file('bill_pdf');
+
+        $filename = 'bill_' . $request_detail->id . '_' . time() . '.pdf';
+        $path = $file->storeAs('request_bills', $filename, 'public');
+
+        // Build public URL
+        $request_detail->bill_pdf = $path;
+        $request_detail->save();
+
+        return redirect()->back()->with('success', 'Bill uploaded successfully');
+    }
 
 }

@@ -510,6 +510,7 @@ var default_country = "{{get_settings('default_country_code_for_mobile_app')}}";
           <label id="owner_options_label" class="form-label">Owner Include Options</label>
             <div id="not_include_owner_container" class="w-100">
               <select name="not_include_owner[]" id="not_include_owner" class="form-control select2" multiple>
+                <option value="All">All</option>
                 @foreach ($Owners as $item)
                     <option value="{{ $item->user_id }}">{{ $item->company_name ." (". $item->email .")" }}</option>
                 @endforeach
@@ -518,6 +519,7 @@ var default_country = "{{get_settings('default_country_code_for_mobile_app')}}";
 
             <div id="include_owner_container" style="display:none;" class="w-100">
               <select name="include_owner[]" id="include_owner" class="form-control select2" multiple>
+                <option value="All">All</option>
                 @foreach ($Owners as $item)
                     <option value="{{ $item->user_id }}">{{ $item->company_name ." (". $item->email .")" }}</option>
                 @endforeach
@@ -719,6 +721,35 @@ var default_country = "{{get_settings('default_country_code_for_mobile_app')}}";
     $("li.d-flex").removeClass("active");
     $('li.bookride').addClass('active');
   })
+  $(document).ready(function () {
+
+    function handleSelectAll(selectId) {
+        $(selectId).on('change', function () {
+            let selected = $(this).val();
+
+            // If "All" is selected
+            if (selected && selected.includes("All")) {
+
+                // Select ALL values
+                let allValues = [];
+                $(this).find('option').each(function () {
+                    let val = $(this).val();
+                    if (val !== "All") {
+                        allValues.push(val);
+                    }
+                });
+
+                $(this).val(allValues).trigger('change.select2');
+            }
+        });
+    }
+
+    // Apply on both selects
+    handleSelectAll('#not_include_owner');
+    handleSelectAll('#include_owner');
+
+});
+
   </script>
 <script>
   let util = '{{ asset('assets/build/js/utils.js') }}'

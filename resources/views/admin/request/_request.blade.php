@@ -79,6 +79,12 @@
                 <button type="button" class="btn btn-info btn-sm">
                    @lang('view_pages.view')
                 </button></a>
+                <button type="button" class="btn btn-danger btn-sm soft-delete" data-url="{{ url('dispatch/cancel/'.$result->id) }}">
+                   @lang('view_pages.Cancel')
+                </button>
+                <!-- <div class="dropdown-item soft-delete" data-url="${baseUrl+'/dispatch/cancel/'+snapshot.request_id}">
+                    <i class="fa fa-dot-circle-o"></i>@lang('view_pages.Cancel')</div>    
+                </div> -->
                     <!-- <div class="dropdown-menu">
                         {{-- <a class="dropdown-item" href="{{ url('requests/detail_view',$result->id) }}"> --}}
                              <a class="dropdown-item" href="{{url('requests/trip_view',$result->id) }}">

@@ -110,6 +110,24 @@
                                     </div>
                                     <div class="col-6">
                                         <div class="form-group m-b-25">
+                                            <label for="baggage">@lang('view_pages.baggage') <span class="text-danger">*</span></label>
+                                            <input class="form-control" type="number" id="baggage" name="baggage"
+                                                   value="{{old('baggage', $type->baggage)}}"
+                                                   placeholder="@lang('view_pages.enter_baggage')" min="0">
+                                            <span class="text-danger">{{ $errors->first('baggage') }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="form-group m-b-25">
+                                            <label for="passenger">@lang('view_pages.passenger') <span class="text-danger">*</span></label>
+                                            <input class="form-control" type="number" id="passenger" name="passenger"
+                                                   value="{{old('passenger', $type->passenger)}}"
+                                                   placeholder="@lang('view_pages.enter_passenger')" min="0">
+                                            <span class="text-danger">{{ $errors->first('passenger') }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="form-group m-b-25">
                                             <label for="description">@lang('view_pages.description') <span
                                                     class="text-danger">*</span></label>
                                             <textarea type="text" name="description" id="description"
@@ -154,7 +172,33 @@
                                             <span class="text-danger">{{ $errors->first('icon_types_for') }}</span>
                                         </div>
                                     </div>
-
+                                    <div class="col-12">
+                                        <label>@lang('view_pages.includes')</label>
+                                        <div id="includes-wrapper">
+                                            @php $includes = old('includes', $type->includes ?? []); @endphp
+                                            @if(!empty($includes) && is_array($includes))
+                                                @foreach($includes as $i => $inc)
+                                                    <div class="input-group mb-2 include-row">
+                                                        <input type="text" name="includes[]" class="form-control" placeholder="@lang('view_pages.enter_include')" value="{{ $inc }}">
+                                                        <div class="input-group-append">
+                                                            <button class="btn btn-danger btn-remove-include" type="button">@lang('view_pages.remove')</button>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            @else
+                                                <div class="input-group mb-2 include-row">
+                                                    <input type="text" name="includes[]" class="form-control" placeholder="@lang('view_pages.enter_include')" value="">
+                                                    <div class="input-group-append">
+                                                        <button class="btn btn-success btn-add-include" type="button">@lang('view_pages.add_more')</button>
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        </div>
+                                        <span class="text-danger">{{ $errors->first('includes') }}</span>
+                                        <div class="input-group-append">
+                                            <button class="btn btn-success btn-add-include" type="button">@lang('view_pages.add_more')</button>
+                                        </div>
+                                    </div>
                                     @if($app_for == "bidding")
                                     <div class="col-6">
                                         <div class="form-group">
@@ -325,6 +369,28 @@ document.addEventListener('DOMContentLoaded', (event) => {
     });
 });
     </script>
+<script>
+    // same include add/remove script used in create view
+    (function(){
+        var includePlaceholder = "@lang('view_pages.enter_include')";
+        var removeLabel = "@lang('view_pages.remove')";
+
+        document.addEventListener('click', function (e) {
+            if (e.target && e.target.classList.contains('btn-add-include')) {
+                var wrapper = document.getElementById('includes-wrapper');
+                var row = document.createElement('div');
+                row.className = 'input-group mb-2 include-row';
+                row.innerHTML = "<input type='text' name='includes[]' class='form-control' placeholder='" + includePlaceholder + "'>" +
+                    "<div class='input-group-append'><button class='btn btn-danger btn-remove-include' type='button'>" + removeLabel + "</button></div>";
+                wrapper.appendChild(row);
+            }
+            if (e.target && e.target.classList.contains('btn-remove-include')) {
+                var row = e.target.closest('.include-row');
+                if (row) row.parentNode.removeChild(row);
+            }
+        });
+    })();
+</script>
 
 @endsection
 

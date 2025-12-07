@@ -231,7 +231,14 @@ Log::info("create-request");
             'booster_seat'=> $request->booster_seat,
             'notes_for_chauffeuer'=>$request->notes_for_chauffeuer,
             'sign_board_name'=>$request->sign_board_name,
-            'ride_type' => $request->booking_type ?? ""
+            'ride_type' => $request->booking_type ?? "",
+            'invoice_type' => $request->invoice_type ?? '',
+            'billing_country' => $request->billing_country ?? '',
+            'billing_first_name' => $request->billing_first_name ?? '',
+            'billing_last_name' => $request->billing_last_name ?? '',
+            'billing_address' => $request->billing_address ?? '',
+            'billing_city' => $request->billing_city ?? '',
+            'billing_zipcode' => $request->billing_zipcode ?? '',
         ];
 
         if($request->has('is_pet_available')){
@@ -462,8 +469,14 @@ Log::info("create-request");
             'booster_seat'=> $request->booster_seat,
             'notes_for_chauffeuer'=>$request->notes_for_chauffeuer,
             'sign_board_name'=>$request->sign_board_name,
-            'ride_type' => $request->booking_type ?? ""
-            
+            'ride_type' => $request->booking_type ?? "",
+            'invoice_type' => $request->invoice_type ?? '',
+            'billing_country' => $request->billing_country ?? '',
+            'billing_first_name' => $request->billing_first_name ?? '',
+            'billing_last_name' => $request->billing_last_name ?? '',
+            'billing_address' => $request->billing_address ?? '',
+            'billing_city' => $request->billing_city ?? '',
+            'billing_zipcode' => $request->billing_zipcode ?? '',
         ];
 
         if($request->has('is_pet_available')){

@@ -140,6 +140,14 @@ class TripRequestTransformer extends Transformer
             'child_seat' => $request->child_seat,
             'booster_seat' => $request->booster_seat,
             'ride_type' => $request->ride_type ? ucfirst(str_replace('-', ' ', $request->ride_type)) : "",
+            'invoice_type' => $request->invoice_type ?? '',
+            'billing_country' => $request->billing_country ?? '',
+            'billing_first_name' => $request->billing_first_name ?? '',
+            'billing_last_name' => $request->billing_last_name ?? '',
+            'billing_address' => $request->billing_address ?? '',
+            'billing_city' => $request->billing_city ?? '',
+            'billing_zipcode' => $request->billing_zipcode ?? '',
+            'status' => $request->status,
         ];
         if(!$request->if_dispatch){
             $params['show_otp_feature'] = true;

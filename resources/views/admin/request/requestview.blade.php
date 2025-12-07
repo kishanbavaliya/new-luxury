@@ -610,7 +610,75 @@ td {
                     </table>
                 </div>
             </div>
+            
+                <div class="box">
+                    <div class="box-header bb-2 border-primary">
+                        <h3 class="box-title">@lang('view_pages.billing_address')</h3>
+                    </div>
 
+                    <div class="box-body">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>@lang('view_pages.invoice_type')</th>
+                                    <th>@lang('view_pages.billing_country')</th>
+                                    <th>@lang('view_pages.billing_first_name')</th>
+                                    <th>@lang('view_pages.billing_last_name')</th>
+                                    <th>@lang('view_pages.billing_address')</th>
+                                    <th>@lang('view_pages.billing_city')</th>
+                                    <th>@lang('view_pages.billing_zipcode')</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>{{ $item->invoice_type ?? '-' }}</td>
+                                    <td>{{ $item->billing_country ?? '-' }}</td>
+                                    <td>{{ $item->billing_first_name ?? '-' }}</td>
+                                    <td>{{ $item->billing_last_name ?? '-' }}</td>
+                                    <td>{{ $item->billing_address ?? '-' }}</td>
+                                    <td>{{ $item->billing_city ?? '-' }}</td>
+                                    <td>{{ $item->billing_zipcode ?? '-' }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            {{-- Bill PDF Upload Section for Completed Requests --}}
+                        @if($item->is_completed)
+                        <div class="box">
+                            <div class="box-header bb-2 border-primary">
+                                <h3 class="box-title">Upload Bill PDF</h3>
+                            </div>
+                            <div class="box-body">
+                                <div class="card-body">
+                                    @if ($item->bill_pdf && $item->bill_pdf)
+                                    <div class="alert alert-success mb-3">
+                                        <i class="fa fa-check-circle"></i> Bill PDF already uploaded.
+                                        <a href="{{ asset($item->bill_pdf) }}" class="btn btn-sm btn-primary" target="_blank">
+                                            <i class="fa fa-download"></i> View/Download
+                                        </a>
+                                    </div>
+                                    @endif
+
+                                    <form action="{{ route('requests.uploadBill', $item->id) }}" method="POST" enctype="multipart/form-data">
+                                        @csrf
+                                        <div class="form-group">
+                                            <label for="bill_pdf">Select PDF File</label>
+                                            <input type="file" class="form-control-file @error('bill_pdf') is-invalid @enderror" 
+                                                    id="bill_pdf" name="bill_pdf" accept=".pdf" required>
+                                            <small class="form-text text-muted">Max file size: 10MB. Only PDF files allowed.</small>
+                                            @error('bill_pdf')
+                                                <span class="invalid-feedback d-block">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                        <button type="submit" class="btn btn-success btn-sm">
+                                            <i class="fa fa-upload"></i> Upload Bill
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
             @if ($item->requestBill)
             <div class="box">
                 <div class="box-header bb-2 border-primary">

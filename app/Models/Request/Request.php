@@ -34,7 +34,7 @@ class Request extends Model
      *
      * @var array
      */
-    protected $fillable = ['request_number','is_later','assign_method','user_id','driver_id','trip_start_time','arrived_at','accepted_at','completed_at','cancelled_at','is_driver_started','is_driver_arrived','is_trip_start','is_completed','is_cancelled','is_driver_confirm','reason','cancel_method','total_distance','total_time','payment_opt','is_paid','user_rated','driver_rated','promo_id','timezone','unit','if_dispatch','zone_type_id','requested_currency_code','custom_reason','attempt_for_schedule','service_location_id','company_key','dispatcher_id','book_for_other_contact','book_for_other','ride_otp','is_rental','rental_package_id','is_out_station','request_eta_amount','comission_percentage','is_surge_applied','owner_id','fleet_id','goods_type_id','goods_type_quantity','requested_currency_symbol','offerred_ride_fare','accepted_ride_fare','is_bid_ride','instant_ride','return_time','is_round_trip','discounted_total','web_booking','on_search','poly_line','is_pet_available','is_luggage_available','transport_type','is_reminder_customer','old_driver_id','send_to_owner_driver','adults','childrens','infants','flight_number','seats_accessories','seats_accessories_amount','baby_bucket','child_seat','booster_seat','notes_for_chauffeuer','sign_board_name','customer_no_show','customer_no_show_file','driver_no_show','driver_no_show_file','refrence_name','refrence_short_name', 'booking_hour', 'ride_type'];
+    protected $fillable = ['request_number','is_later','assign_method','user_id','driver_id','trip_start_time','arrived_at','accepted_at','completed_at','cancelled_at','is_driver_started','is_driver_arrived','is_trip_start','is_completed','is_cancelled','is_driver_confirm','reason','cancel_method','total_distance','total_time','payment_opt','is_paid','user_rated','driver_rated','promo_id','timezone','unit','if_dispatch','zone_type_id','requested_currency_code','custom_reason','attempt_for_schedule','service_location_id','company_key','dispatcher_id','book_for_other_contact','book_for_other','ride_otp','is_rental','rental_package_id','is_out_station','request_eta_amount','comission_percentage','is_surge_applied','owner_id','fleet_id','goods_type_id','goods_type_quantity','requested_currency_symbol','offerred_ride_fare','accepted_ride_fare','is_bid_ride','instant_ride','return_time','is_round_trip','discounted_total','web_booking','on_search','poly_line','is_pet_available','is_luggage_available','transport_type','is_reminder_customer','old_driver_id','send_to_owner_driver','adults','childrens','infants','flight_number','seats_accessories','seats_accessories_amount','baby_bucket','child_seat','booster_seat','notes_for_chauffeuer','sign_board_name','customer_no_show','customer_no_show_file','driver_no_show','driver_no_show_file','refrence_name','refrence_short_name', 'booking_hour', 'ride_type', 'bill_pdf', 'invoice_type','billing_country','billing_first_name','billing_last_name','billing_address','billing_city','billing_zipcode'];
 
     /**
     * The accessors to append to the model's array form.
@@ -511,6 +511,35 @@ class Request extends Model
     public function requestProofs()
     {
         return $this->hasMany(RequestDeliveryProof::class, 'request_id', 'id');
+    }
+
+    public function getStatusAttribute()
+    {
+        if ($this->is_cancelled) {
+            return 'Cancelled';
+        }
+
+        if ($this->is_completed) {
+            return 'Finished';
+        }
+
+        if ($this->is_trip_start) {
+            return 'Passenger on Board';
+        }
+
+        if ($this->is_driver_arrived) {
+            return 'Arrived';
+        }
+
+        if ($this->is_driver_started) {
+            return 'Started';
+        }
+
+        if ($this->is_later == "1" && !empty($this->driver_id)) {
+            return 'Upcoming';
+        }
+
+        return 'Pending';
     }
 
 }

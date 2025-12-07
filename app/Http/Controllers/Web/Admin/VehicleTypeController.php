@@ -114,7 +114,7 @@ class VehicleTypeController extends BaseController
         // dd($request->transport_type);
         // echo "test";
         // exit;
-        $created_params = $request->only(['name', 'capacity','is_accept_share_ride','description','supported_vehicles','short_description', 'transport_type', 'is_taxi','icon_types_for','trip_dispatch_type']);
+        $created_params = $request->only(['name', 'capacity','is_accept_share_ride','description','supported_vehicles','short_description', 'transport_type', 'is_taxi','icon_types_for','trip_dispatch_type','baggage','passenger','includes']);
            
              $is_taxi = $request->transport_type;
 
@@ -133,7 +133,6 @@ class VehicleTypeController extends BaseController
 
         $created_params['is_taxi'] = $request->transport_type;
 
-
         $this->vehicle_type->create($created_params);
 
         $message = trans('succes_messages.type_added_succesfully');
@@ -149,7 +148,6 @@ class VehicleTypeController extends BaseController
     {
         $page = trans('pages_names.edit_type');
         $type = $this->vehicle_type->where('id', $id)->first();
-        //  dd($type);
         // $admins = User::doesNotBelongToRole(RoleSlug::SUPER_ADMIN)->get();
         // $services = ServiceLocation::whereActive(true)->get();
         $app_for = config('app.app_for');
@@ -181,7 +179,7 @@ class VehicleTypeController extends BaseController
         // dd($request->all());
         $this->validateAdmin();
 
-        $created_params = $request->only(['name', 'capacity','is_accept_share_ride','description','supported_vehicles','short_description','transport_type','icon_types_for','trip_dispatch_type']);
+        $created_params = $request->only(['name', 'capacity','is_accept_share_ride','description','supported_vehicles','short_description','transport_type','icon_types_for','trip_dispatch_type','baggage','passenger','includes']);
 
              $is_taxi = $request->transport_type;
 

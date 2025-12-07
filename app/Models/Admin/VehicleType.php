@@ -29,7 +29,18 @@ class VehicleType extends Model
      * @var array
      */
     protected $fillable = [
-         'name', 'icon', 'capacity','is_accept_share_ride','active','company_key','description','supported_vehicles','short_description','size','is_taxi', 'icon_types_for','trip_dispatch_type'
+            'name', 'icon', 'capacity','is_accept_share_ride','active','company_key','description','supported_vehicles','short_description','size','is_taxi', 'icon_types_for','trip_dispatch_type','baggage','passenger','includes'
+    ];
+
+    /**
+     * The attributes that should be cast to native types.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'baggage' => 'integer',
+        'passenger' => 'integer',
+        'includes' => 'array'
     ];
 
     /**
@@ -55,9 +66,10 @@ class VehicleType extends Model
      *
      * @var array
      */
-    public $includes = [
-
-    ];
+    // Note: do not define a public `$includes` property here — that would
+    // shadow the Eloquent attribute named `includes` (JSON column).
+    // If this model needs to expose allowed relation names for the
+    // query-filter library, use a different property name.
 
     /**
      * Searchable rules.

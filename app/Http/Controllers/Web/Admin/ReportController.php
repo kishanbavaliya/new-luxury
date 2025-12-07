@@ -101,6 +101,7 @@ class ReportController extends Controller
         $dateOption = $request->input('date_option', 'month');
         $from = $request->input('from');
         $to = $request->input('to');
+        $owner_id = $request->input('owner_id'); // Get owner filter
 
         switch ($dateOption) {
             case 'today':
@@ -127,23 +128,35 @@ class ReportController extends Controller
         }
 
         $trips = DB::table('requests')
+            ->select(
+                'owner_id',
+                DB::raw('COUNT(*) as trip_count'),
+                DB::raw('SUM(request_eta_amount) as total_revenue')
+            )
             ->where('is_completed', 1)
             ->whereBetween('created_at', [$from, $to])
-            ->whereNull('deleted_at')
-            ->get();
+            ->whereNull('deleted_at');
+
+        // Filter by owner if selected
+        if ($owner_id) {
+            $trips = $trips->where('owner_id', $owner_id);
+        }
+
+        $trips = $trips->get();
 
         $totalRevenue = $trips->sum('discounted_total');
         $ownRevenue = $trips->where('company_key', 70)->sum('discounted_total');
 
         // Map revenue by partner
-        $partnerData = $trips->groupBy('company_key')->map(function ($group, $companyKey) {
-            $company = DB::table('companies')->where('id', $companyKey)->first();
+        $partnerData = $trips->map(function ($row) {
+            $owner = Owner::find($row->owner_id);
             return [
-                'name' => $company->name ?? 'Unknown',
-                'revenue' => $group->sum('discounted_total'),
-                'trip_count' => $group->count(),
+                'owner_id' => $row->owner_id,
+                'name' => $owner->owner_name ?? "Unknown",
+                'trip_count' => $row->trip_count,
+                'revenue' => $row->total_revenue
             ];
-        })->values(); // Ensure numeric keys for pagination
+        }); // Ensure numeric keys for pagination
 
         // Manual Pagination
         $currentPage = LengthAwarePaginator::resolveCurrentPage();
@@ -154,10 +167,13 @@ class ReportController extends Controller
             'query' => request()->query()
         ]);
 
+        // Get all owners for dropdown
+        $owners = Owner::select('id', 'owner_name')->orderBy('owner_name')->get();
+
         return view('admin.reports.revenue_report', compact(
             'page', 'main_menu', 'sub_menu',
             'from', 'to', 'totalRevenue', 'ownRevenue',
-            'partnerRevenues', 'dateOption'
+            'partnerRevenues', 'dateOption', 'owners', 'owner_id'
         ));
     }
 
@@ -527,25 +543,25 @@ $pdf = PDF::loadView('admin.reports.pdf_template', compact('reportData', 'driver
         return $filePath;
     }
     public function downloadOwnerReport(Request $request, QueryFilterContract $queryFilter)
-{
-    $format = $request->format;
+    {
+        $format = $request->format;
 
-    $query = Owner::query();
-    if (env('APP_FOR') == 'demo') {
-        $query->whereHas('user', function ($query) use ($request) {
-            $query->where('active', $request->status);
-        });
+        $query = Owner::query();
+        if (env('APP_FOR') == 'demo') {
+            $query->whereHas('user', function ($query) use ($request) {
+                $query->where('active', $request->status);
+            });
+        }
+
+        $data = $queryFilter->builder($query)->customFilter(new OwnerFilter)->defaultSort('-date')->get();
+
+        $filename = "$request->model Report-" . date('ymdis') . '.' . $format;
+
+            Excel::store(new OwnerExport($data), "reports/{$filename}", 'public');
+
+            $filePath = asset('reports/' . $filename);
+
+            return $filePath;
     }
-
-    $data = $queryFilter->builder($query)->customFilter(new OwnerFilter)->defaultSort('-date')->get();
-
-    $filename = "$request->model Report-" . date('ymdis') . '.' . $format;
-
-    Excel::store(new OwnerExport($data), "reports/{$filename}", 'public');
-
-    $filePath = asset('reports/' . $filename);
-
-    return $filePath;
-}
 
 }

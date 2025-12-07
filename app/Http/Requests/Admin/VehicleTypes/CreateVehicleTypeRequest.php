@@ -25,6 +25,10 @@ class CreateVehicleTypeRequest extends BaseRequest
             'icon_types_for' => 'required',
             // 'is_accept_share_ride'=>'required|boolean',
             'trip_dispatch_type'=>'sometimes',
+            'includes' => 'sometimes|array',
+            'includes.*' => 'string|max:255',
+            'baggage' => 'sometimes|nullable|integer|min:0',
+            'passenger' => 'sometimes|nullable|integer|min:0',
 
         ];
     }

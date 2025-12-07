@@ -19,7 +19,11 @@ class UpdateVehicleTypeRequest extends BaseRequest
             'description'=>'required|max:25',
             'short_description'=>'required|max:25',
             'supported_vehicles'=>'required',
-            'icon_types_for'=>'required'
+            'icon_types_for'=>'required',
+            'baggage' => 'sometimes|nullable|integer|min:0',
+            'passenger' => 'sometimes|nullable|integer|min:0'
+            , 'includes' => 'sometimes|array',
+            'includes.*' => 'string|max:255'
             // 'is_accept_share_ride'=>'required|boolean',
         ];
     }

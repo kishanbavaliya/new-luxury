@@ -219,6 +219,42 @@
                 });
 
             });
+            $(document).on('click', '.soft-delete', function(e) {
+                e.preventDefault();
 
+                let url = $(this).attr('data-url');
+
+                swal({
+                    title: "Cancel the ride ?",
+                    type: "error",
+                    showCancelButton: true,
+                    confirmButtonColor: "#DD6B55",
+                    confirmButtonText: "Cancel",
+                    cancelButtonText: "Close",
+                    closeOnConfirm: false,
+                    closeOnCancel: true
+                }, function(isConfirm) {
+                    if (isConfirm) {
+                        swal.close();
+
+                        $.ajax({
+                            url: url,
+                            cache: false,
+                            success: function(res) {
+                              window.location.reload();
+                                $.toast({
+                                    heading: '',
+                                    text: res,
+                                    position: 'top-right',
+                                    loaderBg: '#ff6849',
+                                    icon: 'success',
+                                    hideAfter: 5000,
+                                    stack: 1
+                                });
+                            }
+                        });
+                    }
+                });
+            });
         </script>
     @endsection

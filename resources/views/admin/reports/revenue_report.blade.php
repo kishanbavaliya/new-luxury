@@ -20,6 +20,22 @@
 
                         <div class="col-md-3">
                             <div class="form-group">
+                                <label>Select Owner</label>
+                                <select name="owner_id" id="owner_id" class="form-control">
+                                    <option value="">All Owners</option>
+                                    @forelse($owners as $owner)
+                                        <option value="{{ $owner->id }}" {{ $owner_id == $owner->id ? 'selected' : '' }}>
+                                            {{ $owner->owner_name }}
+                                        </option>
+                                    @empty
+                                        <option disabled>No owners available</option>
+                                    @endforelse
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="form-group">
                                 <label>Date Filter</label>
                                 <select name="date_option" id="date_option" class="form-control">
                                     <option value="date" {{ request('date_option', $dateOption) == 'date' ? 'selected' : '' }}>Custom Date</option>
@@ -57,6 +73,16 @@
                     <h5 class="mt-4"><strong>Summary:</strong></h5>
                     <table class="table table-bordered">
                         <tbody>
+                            <tr>
+                                <th>Filter Applied</th>
+                                <td>
+                                    @if($owner_id)
+                                        Owner: <strong>{{ $owners->where('id', $owner_id)->first()->owner_name ?? 'Unknown' }}</strong>
+                                    @else
+                                        <strong>All Owners</strong>
+                                    @endif
+                                </td>
+                            </tr>
                             <tr>
                                 <th>Total Revenue (All Partners)</th>
                                 <td>₹{{ number_format($totalRevenue, 2) }}</td>
