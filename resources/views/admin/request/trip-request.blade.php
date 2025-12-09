@@ -133,6 +133,18 @@ $value=web_map_settings();
                                             </div>
                                             <div class="col-12 mb-3">
                                                 <h5 class="bg-secondary p-2 text-white">
+                                                    @lang('view_pages.billing_address') :
+                                                </h5>
+                                                <p class="mb-1 f-12">@lang('view_pages.invoice_type') :<b>{{ $item->invoice_type ?? '-' }}</b></p>
+                                                <p class="mb-1 f-12">@lang('view_pages.billing_country') :<b>{{ $item->billing_country ?? '-' }}</b></p>
+                                                <p class="mb-1 f-12">@lang('view_pages.billing_first_name') :<b>{{ $item->billing_first_name ?? '-' }}</b></p>
+                                                <p class="mb-1 f-12">@lang('view_pages.billing_last_name') :<b>{{ $item->billing_last_name ?? '-' }}</b></p>
+                                                <p class="mb-1 f-12">@lang('view_pages.billing_address') :<b>{{ $item->billing_address ?? '-' }}</b></p>
+                                                <p class="mb-1 f-12">@lang('view_pages.billing_city') :<b>{{ $item->billing_city ?? '-' }}</b></p>
+                                                <p class="mb-1 f-12">@lang('view_pages.billing_zipcode') :<b>{{ $item->billing_zipcode ?? '-' }}</b></p>
+                                            </div>
+                                            <div class="col-12 mb-3">
+                                                <h5 class="bg-secondary p-2 text-white">
                                                    @lang('view_pages.payment_details') :
                                                 </h5>
                                                 <!--  <p class="mb-1 f-12">
@@ -765,6 +777,18 @@ $value=web_map_settings();
                                                                                                     Weight : <b>{{ $item->zoneType->vehicleType->maximum_weight_can_carrying }}</b>
                                                                                                 </p> -->
 
+                                            </div>
+                                            <div class="col-12 mb-3">
+                                                <h5 class="bg-secondary p-2 text-white">
+                                                    @lang('view_pages.billing_address') :
+                                                </h5>
+                                                <p class="mb-1 f-12">@lang('view_pages.invoice_type') :<b>{{ $item->invoice_type ?? '-' }}</b></p>
+                                                <p class="mb-1 f-12">@lang('view_pages.billing_country') :<b>{{ $item->billing_country ?? '-' }}</b></p>
+                                                <p class="mb-1 f-12">@lang('view_pages.billing_first_name') :<b>{{ $item->billing_first_name ?? '-' }}</b></p>
+                                                <p class="mb-1 f-12">@lang('view_pages.billing_last_name') :<b>{{ $item->billing_last_name ?? '-' }}</b></p>
+                                                <p class="mb-1 f-12">@lang('view_pages.billing_address') :<b>{{ $item->billing_address ?? '-' }}</b></p>
+                                                <p class="mb-1 f-12">@lang('view_pages.billing_city') :<b>{{ $item->billing_city ?? '-' }}</b></p>
+                                                <p class="mb-1 f-12">@lang('view_pages.billing_zipcode') :<b>{{ $item->billing_zipcode ?? '-' }}</b></p>
                                             </div>
                                             <div class="col-12 mb-3">
                                                 <h5 class="bg-secondary p-2 text-white">
