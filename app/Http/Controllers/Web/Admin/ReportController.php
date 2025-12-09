@@ -29,6 +29,8 @@ use App\Exports\OwnerExport;
 use App\Base\Filters\Admin\OwnerFilter;
 use Config;
 use PDF;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 
 class ReportController extends Controller
 {
@@ -133,6 +135,7 @@ class ReportController extends Controller
                 DB::raw('COUNT(*) as trip_count'),
                 DB::raw('SUM(request_eta_amount) as total_revenue')
             )
+            ->groupBy('owner_id')
             ->where('is_completed', 1)
             ->whereBetween('created_at', [$from, $to])
             ->whereNull('deleted_at');
@@ -144,8 +147,8 @@ class ReportController extends Controller
 
         $trips = $trips->get();
 
-        $totalRevenue = $trips->sum('discounted_total');
-        $ownRevenue = $trips->where('company_key', 70)->sum('discounted_total');
+        $totalRevenue = $trips->sum('total_revenue');
+        $ownRevenue = $trips->where('owner_id', 'ba2ac035-e027-40e3-a626-e8f6b35cfe35')->sum('total_revenue');
 
         // Map revenue by partner
         $partnerData = $trips->map(function ($row) {
@@ -158,6 +161,61 @@ class ReportController extends Controller
             ];
         }); // Ensure numeric keys for pagination
 
+        // Get all owners for dropdown (needed for PDF rendering and the view)
+        $owners = Owner::select('id', 'owner_name')->orderBy('owner_name')->get();
+
+        // If there are any rides and the user requested to send email only, generate PDF and email it
+        if ($partnerData->count() > 0 && $request->filled('send_email')) {
+            $email = $request->input('email');
+
+            if (empty($email)) {
+                return redirect()->route('revenueReport', $request->except(['send_email', 'download_pdf']))->with('error', 'Please provide an email address to send the report.');
+            }
+
+            $filename = 'revenue-report-' . now()->format('YmdHis') . '.pdf';
+
+            $pdf = PDF::loadView('admin.reports.revenue_report_pdf', [
+                'partnerData' => $partnerData,
+                'from' => $from,
+                'to' => $to,
+                'totalRevenue' => $totalRevenue,
+                'ownRevenue' => $ownRevenue,
+                'owners' => $owners,
+                'owner_id' => $owner_id
+            ])->setPaper('a4', 'portrait');
+
+            try {
+                Mail::send([], [], function ($message) use ($email, $pdf, $filename) {
+                    $message->to($email)
+                        ->subject('Revenue Report')
+                        ->setBody('Please find attached the requested revenue report.');
+                    $message->attachData($pdf->output(), $filename, ['mime' => 'application/pdf']);
+                });
+                return redirect()->route('revenueReport', $request->except(['send_email', 'download_pdf']))->with('success', 'Revenue report emailed successfully.');
+            } catch (\Exception $e) {
+                logger()->error('Failed to send revenue report email: ' . $e->getMessage());
+                return redirect()->route('revenueReport', $request->except(['send_email', 'download_pdf']))->with('error', 'Failed to send email.');
+            }
+        }
+
+        // If there are any rides and the user requested a PDF download, generate PDF and return it as a browser download.
+        if ($partnerData->count() > 0 && $request->filled('download_pdf')) {
+            $filename = 'revenue-report-' . now()->format('YmdHis') . '.pdf';
+
+            $pdf = PDF::loadView('admin.reports.revenue_report_pdf', [
+                'partnerData' => $partnerData,
+                'from' => $from,
+                'to' => $to,
+                'totalRevenue' => $totalRevenue,
+                'ownRevenue' => $ownRevenue,
+                'owners' => $owners,
+                'owner_id' => $owner_id
+            ])->setPaper('a4', 'portrait');
+
+            // Return PDF download to browser (no email sending)
+            return $pdf->download($filename);
+        }
+
         // Manual Pagination
         $currentPage = LengthAwarePaginator::resolveCurrentPage();
         $perPage = 10;
@@ -167,9 +225,7 @@ class ReportController extends Controller
             'query' => request()->query()
         ]);
 
-        // Get all owners for dropdown
-        $owners = Owner::select('id', 'owner_name')->orderBy('owner_name')->get();
-
+        
         return view('admin.reports.revenue_report', compact(
             'page', 'main_menu', 'sub_menu',
             'from', 'to', 'totalRevenue', 'ownRevenue',

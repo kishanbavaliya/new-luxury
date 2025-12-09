@@ -56,7 +56,7 @@ class EtaTransformer extends Transformer
             'capacity'=> $zone_type->vehicleType->capacity,
             'baggage'=> $zone_type->vehicleType->baggage ?? "",
             'passenger'=> $zone_type->vehicleType->passenger ?? "",
-            'includes'=> $zone_type->vehicleType->includes ?? "",
+            'includes'=> $zone_type->vehicleType->includes ?? [],
             'payment_type'=>$zone_type->payment_type,
             'is_default'=>false,
             'enable_bidding'=>false,

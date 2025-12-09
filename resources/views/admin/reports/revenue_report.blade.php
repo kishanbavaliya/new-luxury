@@ -65,6 +65,18 @@
                             <button type="submit" class="btn btn-primary mt-2">Filter</button>
                         </div>
 
+                        <div class="col-md-4 mt-4">
+                            <div class="form-group">
+                                <label>Send To Email (optional)</label>
+                                <input type="email" name="email" class="form-control" placeholder="enter recipient email" value="{{ request('email') }}">
+                            </div>
+                        </div>
+
+                        <div class="col-md-2 mt-4 d-flex align-items-end align-items-center">
+                            <button type="submit" name="send_email" value="1" class="btn btn-warning mr-2">Send Email</button>
+                            <button type="submit" name="download_pdf" value="1" class="btn btn-success">Download PDF</button>
+                        </div>
+
                     </div>
                 </form>
 

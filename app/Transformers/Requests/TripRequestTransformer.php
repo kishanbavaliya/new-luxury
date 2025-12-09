@@ -148,6 +148,7 @@ class TripRequestTransformer extends Transformer
             'billing_city' => $request->billing_city ?? '',
             'billing_zipcode' => $request->billing_zipcode ?? '',
             'status' => $request->status,
+            'bill_pdf' => $request->bill_pdf ? asset($request->bill_pdf) : "",
         ];
         if(!$request->if_dispatch){
             $params['show_otp_feature'] = true;
