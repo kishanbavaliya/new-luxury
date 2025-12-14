@@ -197,14 +197,16 @@ class CreateNewRequestController extends BaseController
         // Get last request's request_number
         $request_number = $this->request->orderBy('created_at', 'DESC')->pluck('request_number')->first();
         if ($request_number) {
-            $request_number = explode('_', $request_number);
-            $request_number = $request_number[1]?:000000;
+            $number = (int) str_replace('B', '', $request_number);
         } else {
-            $request_number = 000000;
+            $number = 1000;
         }
+        
+        if($number == 0){
+            $number = 1000;
+        }
+        $request_number = 'B' . ($number + 1);
         // Generate request number
-        $request_number = 'REQ_'.sprintf("%06d", $request_number+1);
-
 
         $request_params = [
             'request_number'=>$request_number,
@@ -423,14 +425,15 @@ class CreateNewRequestController extends BaseController
         // Get last request's request_number
         $request_number = $this->request->orderBy('created_at', 'DESC')->pluck('request_number')->first();
         if ($request_number) {
-            $request_number = explode('_', $request_number);
-            $request_number = $request_number[1]?:000000;
+            $number = (int) str_replace('B', '', $request_number);
         } else {
-            $request_number = 000000;
+            $number = 1000;
         }
-        // Generate request number
-        $request_number = 'REQ_'.sprintf("%06d", $request_number+1);
-
+        
+        if($number == 0){
+            $number = 1000;
+        }
+        $request_number = 'B' . ($number + 1);
         // Convert trip start time as utc format
         $timezone = $service_location->timezone?:env('SYSTEM_DEFAULT_TIMEZONE');
 
