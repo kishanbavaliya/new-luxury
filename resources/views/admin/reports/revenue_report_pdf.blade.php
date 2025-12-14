@@ -85,12 +85,12 @@
 
     <div class="summary-row">
         <span class="label">Total Revenue (All Partners):</span>
-        ₹{{ number_format($totalRevenue ?? 0, 2) }}
+        €{{ number_format($totalRevenue ?? 0, 2) }}
     </div>
 
     <div class="summary-row">
         <span class="label">Your Revenue (Luxury Limoexpress):</span>
-        ₹{{ number_format($ownRevenue ?? 0, 2) }}
+        €{{ number_format($ownRevenue ?? 0, 2) }}
     </div>
 </div>
 
@@ -101,7 +101,7 @@
         <tr>
             <th>Partner Name</th>
             <th>Number of Trips</th>
-            <th>Revenue (₹)</th>
+            <th>Revenue (Euro)</th>
         </tr>
     </thead>
     <tbody>
@@ -109,7 +109,7 @@
             <tr>
                 <td>{{ $partner['name'] }}</td>
                 <td>{{ $partner['trip_count'] }}</td>
-                <td>₹{{ number_format($partner['revenue'], 2) }}</td>
+                <td>{{ number_format($partner['revenue'], 2) }}</td>
             </tr>
         @empty
             <tr>

@@ -89,7 +89,7 @@ class RequestController extends Controller
 
         $item = $request;
         $data = $request;
-
+        // dd($item->is_completed);
         return view('admin.request.requestview', compact('page', 'main_menu', 'sub_menu', 'item','data'));
     }
     public function getSingleRequestOpen(RequestRequest $request)

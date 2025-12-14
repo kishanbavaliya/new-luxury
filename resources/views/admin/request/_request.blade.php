@@ -69,6 +69,11 @@
                             <i class="fa fa-eye"></i>Download Driver Invoice</a>
 
                     </div>
+                     @if ($result->is_cancelled != '1')
+                        <button type="button" class="btn btn-danger btn-sm soft-delete" data-url="{{ url('dispatch/cancel/'.$result->id) }}">
+                        @lang('view_pages.Cancel')
+                        </button>
+                    @endif
                 <!-- </div> -->
             </td>
             @else

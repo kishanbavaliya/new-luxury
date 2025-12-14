@@ -531,9 +531,16 @@ class Request extends Model
             return 'Arrived';
         }
 
-        if ($this->is_driver_started) {
+        if ($this->is_driver_confirm) {
             return 'Started';
         }
+
+        if ($this->is_driver_started && !empty($this->driver_id) && !empty($this->accepted_at)) {
+            return 'Accepted';
+        }
+        // if ($this->is_driver_started) {
+        //     return 'Started';
+        // }
 
         if ($this->is_later == "1" && !empty($this->driver_id)) {
             return 'Upcoming';

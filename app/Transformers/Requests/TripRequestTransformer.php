@@ -118,6 +118,8 @@ class TripRequestTransformer extends Transformer
             'driver_no_show_file'=>$request->driver_no_show_file,
             'ride_user_rating'=>0,
             'ride_driver_rating'=>0,
+            'ride_user_rating_comment'=>"",
+            'ride_driver_rating_comment'=>"",
             'if_dispatch'=>false,
             'goods_type'=>$request->goodsTypeDetail?$request->goodsTypeDetail->goods_type_name:'-',
             'goods_type_quantity'=>$request->goods_type_quantity,
@@ -244,7 +246,9 @@ class TripRequestTransformer extends Transformer
         if($request->requestRating()->exists()){
 
           $params['ride_user_rating'] = $request->requestRating()->where('user_rating',1)->pluck('rating')->first();
+          $params['ride_user_rating_comment'] = $request->requestRating()->where('user_rating',1)->pluck('comment')->first();
 
+            $params['ride_driver_rating_comment'] = $request->requestRating()->where('driver_rating',1)->pluck('comment')->first();
             $params['ride_driver_rating'] = $request->requestRating()->where('driver_rating',1)->pluck('rating')->first();
         }
         if($request->if_dispatch){

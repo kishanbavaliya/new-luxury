@@ -185,12 +185,62 @@ class ReportController extends Controller
             ])->setPaper('a4', 'portrait');
 
             try {
-                Mail::send([], [], function ($message) use ($email, $pdf, $filename) {
+                Mail::send([], [], function ($message) use (
+                    $email, $pdf, $filename, $from, $to,
+                    $partnerData, $totalRevenue, $owners
+                ) {
+                    // Get partner name (if specific owner selected)
+                    $partnerName = "Partner";
+                    if (!empty($partnerData) && count($partnerData) == 1) {
+                        $partnerName = $partnerData->first()['name'] ?? "Partner";
+                    }
+
+                    // Total rides
+                    $totalRides = $partnerData->sum('trip_count');
+
+                    // Commission (example: 10% of revenue – change as per your logic)
+                    $commission = $totalRevenue * 0.10;
+
+                    // Net payout (example: revenue minus commission)
+                    $netPayout = $totalRevenue - $commission;
+
+                    $companyName = "Luxury Limoexpress"; // Change your company name here
+
+                    // Email subject
+                    $subject = "Your Revenue Report for {$from} to {$to}";
+
+                    // Email body template
+                    $body = "
+                        <p>Dear <strong>{$partnerName}</strong>,</p>
+
+                        <p>We hope you are doing well.<br>
+                        Please find attached your Revenue Report for the period 
+                        <strong>{$from}</strong> to <strong>{$to}</strong>.</p>
+
+                        <p><strong>Below is a quick summary of your earnings:</strong></p>
+                        <ul>
+                            <li><strong>Total Rides Completed:</strong> {$totalRides}</li>
+                            <li><strong>Total Revenue Generated:</strong> €{$totalRevenue}</li>
+                            <li><strong>Net Payout:</strong> €{$netPayout}</li>
+                        </ul>
+
+                        <p>The detailed statement is attached in PDF format for your records.</p>
+
+                        <p>If you have any questions, feel free to reply to this email—we’re always happy to help.</p>
+
+                        <p>Thank you for partnering with us!<br>
+                        <strong>Warm regards,<br>{$companyName}</strong></p>
+                    ";
+
+                    // Send email
                     $message->to($email)
-                        ->subject('Revenue Report')
-                        ->setBody('Please find attached the requested revenue report.');
+                        ->subject($subject)
+                        ->setBody($body, 'text/html');
+
+                    // Attach PDF
                     $message->attachData($pdf->output(), $filename, ['mime' => 'application/pdf']);
                 });
+
                 return redirect()->route('revenueReport', $request->except(['send_email', 'download_pdf']))->with('success', 'Revenue report emailed successfully.');
             } catch (\Exception $e) {
                 logger()->error('Failed to send revenue report email: ' . $e->getMessage());

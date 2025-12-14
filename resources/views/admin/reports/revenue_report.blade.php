@@ -97,11 +97,11 @@
                             </tr>
                             <tr>
                                 <th>Total Revenue (All Partners)</th>
-                                <td>₹{{ number_format($totalRevenue, 2) }}</td>
+                                <td>€{{ number_format($totalRevenue, 2) }}</td>
                             </tr>
                             <tr>
                                 <th>Your Revenue (Luxury Limoexpress)</th>
-                                <td>₹{{ number_format($ownRevenue, 2) }}</td>
+                                <td>€{{ number_format($ownRevenue, 2) }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -113,7 +113,7 @@
                             <tr>
                                 <th>Partner Name</th>
                                 <th>Number of Trips</th>
-                                <th>Revenue (₹)</th>
+                                <th>Revenue (€)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -121,7 +121,7 @@
                                 <tr>
                                     <td>{{ $partner['name'] }}</td>
                                     <td>{{ $partner['trip_count'] }}</td>
-                                    <td>₹{{ number_format($partner['revenue'], 2) }}</td>
+                                    <td>€{{ number_format($partner['revenue'], 2) }}</td>
                                 </tr>
                             @empty
                                 <tr>

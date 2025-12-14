@@ -13,28 +13,47 @@ class CreateTripRequest extends BaseRequest
      */
     public function rules()
     {
-        return [
-            'booking_type' => 'required|in:book-now,book-later,book-hourly',
+        if($this->has('booking_type') && $this->get('ride_type') == 'book-hourly') {
+            $data = [
+                'booking_type' => 'required|in:book-now,book-later,book-hourly',
 
-            // Drop only required when NOT hourly booking
-            'drop_lat'     => 'required_unless:booking_type,book-hourly',
-            'drop_lng'     => 'required_unless:booking_type,book-hourly',
-            'drop_address' => 'required_unless:booking_type,book-hourly',
+                // Drop only required when NOT hourly booking
+                'booking_hour' => 'required_if:booking_type,book-hourly|integer|min:1|max:12',
+                'pick_lat'  => 'required',
+                'pick_lng'  => 'required',
+                'pick_address'=>'required',
+                'vehicle_type'=>'sometimes|required|exists:zone_types,id',
+                'payment_opt'=>'sometimes|required|in:0,1,2',
+                'drivers'=>'sometimes|required',
+                'is_later'=>'sometimes|required',
+                'trip_start_time'=>'sometimes|required|date_format:Y-m-d H:i:s',
+                'promocode_id'=>'sometimes|required|exists:promo,id',
+                'transport_type'=>'sometimes|required',
+            ];
+            return $data;
+        } else {
+            return [
+                'booking_type' => 'required|in:book-now,book-later,book-hourly',
+    
+                // Drop only required when NOT hourly booking
+                'drop_lat'     => 'required_unless:booking_type,book-hourly',
+                'drop_lng'     => 'required_unless:booking_type,book-hourly',
+                'drop_address' => 'required_unless:booking_type,book-hourly',
+                'pick_lat'  => 'required',
+                'pick_lng'  => 'required',
+                // 'drop_lat'  =>'sometimes|required',
+                // 'drop_lng'  =>'sometimes|required',
+                'vehicle_type'=>'sometimes|required|exists:zone_types,id',
+                'payment_opt'=>'sometimes|required|in:0,1,2',
+                'pick_address'=>'required',
+                // 'drop_address'=>'sometimes|required',
+                'drivers'=>'sometimes|required',
+                'is_later'=>'sometimes|required',
+                'trip_start_time'=>'sometimes|required|date_format:Y-m-d H:i:s',
+                'promocode_id'=>'sometimes|required|exists:promo,id',
+                'transport_type'=>'sometimes|required',
+            ];
 
-            'booking_hour' => 'required_if:booking_type,book-hourly|integer|min:1|max:12',
-            'pick_lat'  => 'required',
-            'pick_lng'  => 'required',
-            // 'drop_lat'  =>'sometimes|required',
-            // 'drop_lng'  =>'sometimes|required',
-            'vehicle_type'=>'sometimes|required|exists:zone_types,id',
-            'payment_opt'=>'sometimes|required|in:0,1,2',
-            'pick_address'=>'required',
-            // 'drop_address'=>'sometimes|required',
-            'drivers'=>'sometimes|required',
-            'is_later'=>'sometimes|required',
-            'trip_start_time'=>'sometimes|required|date_format:Y-m-d H:i:s',
-            'promocode_id'=>'sometimes|required|exists:promo,id',
-            'transport_type'=>'sometimes|required',
-        ];
+        }
     }
 }

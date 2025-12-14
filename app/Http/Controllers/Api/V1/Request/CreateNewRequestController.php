@@ -138,7 +138,7 @@ class CreateNewRequestController extends BaseController
 
     public function createRequest(CreateTripRequest $request)
     {
-Log::info("create-request");
+        Log::debug('API Received request data:', $request->all());
 
 
         /**
